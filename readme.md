@@ -560,7 +560,7 @@ Why do these results matter for economists? Two reasons:
 
 # Tables (ready + sketch)
 
-## T1. Dataset Prevalence by Horizon (ready)
+## T1. Dataset Prevalence by Horizon (ready) // h= 다양성 // + FAO label 기준
 
 * **목적**: h=1 / h=3의 유효 샘플 수, 양성 수, 양성비(희소성) 명시 → AUPRC 해석의 기준선 제공.
 * **열**: `Horizon, Valid Samples, Positives, Positive Rate`.
@@ -584,7 +584,7 @@ Why do these results matter for economists? Two reasons:
 > | 2022 | 2017–2021   |   0.848 |      0.601 |     0.156 | 0.063 |     0.077 |  0.385 |      7.62 | -0.247 |
 > | 2023 | 2017–2022   |   0.867 |  **0.714** | **0.210** | 0.065 | **0.013** |  0.261 |      8.25 | -0.153 |
 
-## T3. 2023 Horizon Comparison (h=1 vs h=3) (ready)
+## T3. 2023 Horizon Comparison (h=1 vs h=3) (ready)  +h=1,2,3 // 4,5,6,7 등은 Appendix + 입력 L=12 조절에 따른 결과 비교
 
 * **목적**: 리드타임별 난이도/효율 비교(1개월 vs 3개월).
 * **열**: `Horizon, AUROC, AUPRC, Brier, ECE, Hit@b(10%), FA@b/100)`.
@@ -596,13 +596,13 @@ Why do these results matter for economists? Two reasons:
 * **열**: `area_ord, iso3, name, m49`.
 * **다운로드**: [table\_country\_coverage.csv](sandbox:/mnt/data/table_country_coverage.csv)
 
-## T5. Operational Metrics by Evaluation Year (sketch)
+## T5. Operational Metrics by Evaluation Year (sketch) // 할지 말지 고민
 
 * **목적**: 예산기반 운용 관점 요약(정탐률 Hit\@b, False Alarm/100). T2에서 두 열만 추출하여 별도 표로 묶으면 운영 파트에 바로 인용 가능.
 * **열**: `EvalYear, Hit@b(10%), FA@b/100, PosRate (h=3)`.
 * **상태**: 값은 이미 T2에 포함 → **T5는 T2 재정렬 버전으로 바로 생성 가능**. 원하면 제가 CSV로도 뽑아둘게요.
 
-## T6. Label Threshold Ablation (thr=1.8 vs 2.0 vs 2.5) (sketch)
+## T6. Label Threshold Ablation (thr=1.8 vs 2.0 vs 2.5) (sketch) // 할지 말지 고민
 
 * **목적**: 라벨 강도 변화가 OOS 성능/운영지표에 주는 영향(메인 실험은 thr1.8, 보조 테이블에 A/B/C 비교).
 * **열**: `Label Thr, Mask Policy, Calibration, AUROC (h=3), AUPRC (h=3), Brier, ECE, Hit@b`.

@@ -673,6 +673,14 @@ Why do these results matter for economists? Two reasons:
 * **열**: `Label Thr, Mask Policy, Calibration, AUROC (h=3), AUPRC (h=3), Brier, ECE, Hit@b`.
 * **상태**: 현재 로그 기반 수치 확보; 정제 후 표로 제공 가능. (요청 시 수치 입력해 **T6 CSV** 만들겠습니다.)
 
+
+## T7. Static feat 조합 (FAO 유무)
+
+* **목적**: 
+* **열**: 
+* **상태**:
+
+
 ---
 
 # Figures (ready + sketch)

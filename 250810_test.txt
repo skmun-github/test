@@ -1,0 +1,1887 @@
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python build_dataset_v7.py   --npz          data/blacksea_tensor_log1p.npz   --meta-json    data/blacksea_tensor_log1p.meta.json   --sparse-pt    data/blacksea_sparse.pt   --price-csv    data/raw/CPIs.csv   --crops-csv    data/raw/Crops_and_livestock_products.csv   --gdp-csv      data/raw/Value_of_Agricultural_Production.csv   --wdi-xlsx     data/raw/WDI_wo_CPI_related.xlsx   --raw-dir      data/raw   --out-dir      data/processed_v7_ifpa_onset_fixed_thr2p0   --window-len   12   --horizon      1 3   --scaler       robust   --month-enc    cyclical   --surge-mode   ifpa   --ifpa-gamma   0.6   --ifpa-thr     2.0   --multi-thr    1.8,2.0,2.5   --label-timing onset   --min-duration 2   --refractory   2   --baseline-mode  fixed   --baseline-years 2000:2018   --vintage-interp ffill   --cv-stride    0   --val-year     2022   --use-sparse   --verbose
+
+11:06:45 [INFO] Sparse COO ➜ dense loaded (shape (84, 5, 1133, 904))
+11:06:48 [INFO] X_win torch.Size([72, 12, 5, 1133, 904])  windows=72
+11:06:55 [INFO] Countries=135
+11:07:02 [INFO] ✅ Finished → data/processed_v7_ifpa_onset_fixed_thr2p0/20250810 (25.5s)                                                                                                
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ 
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python extract_subset_v7.py   --in-dir  data/processed_v7_ifpa_onset_fixed_thr2p0/$(date +%Y%m%d)   --out-dir data/processed_v7_ifpa_onset_fixed_thr2p0_AFR
+11:07:13 [INFO] Loaded: A=135  T=84  horizons=[1, 3]
+11:07:13 [INFO] Filter size: 52 ISO3
+11:07:13 [INFO] ✓ Subset countries present in dataset: 36
+11:07:18 [INFO] ✓ Recomputed label_stats_yearly for subset.
+11:07:18 [INFO] Saved → /home/skmoon/codes/250727_WIP_AIS_new/data/processed_v7_ifpa_onset_fixed_thr2p0_AFR
+11:07:18 [INFO] Top-10 kept countries:
+11:07:18 [INFO]  · [DZA] Algeria  (old:1 → new:0)
+11:07:18 [INFO]  · [AGO] Angola  (old:2 → new:1)
+11:07:18 [INFO]  · [BWA] Botswana  (old:14 → new:2)
+11:07:18 [INFO]  · [BDI] Burundi  (old:19 → new:3)
+11:07:18 [INFO]  · [CMR] Cameroon  (old:22 → new:4)
+11:07:18 [INFO]  · [CPV] Cabo Verde  (old:24 → new:5)
+11:07:18 [INFO]  · [CAF] Central African Republic  (old:25 → new:6)
+11:07:18 [INFO]  · [TCD] Chad  (old:27 → new:7)
+11:07:18 [INFO]  · [COG] Congo  (old:30 → new:8)
+11:07:18 [INFO]  · [BEN] Benin  (old:35 → new:9)
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python preflight_v7_africa.py   --proc-dir data/processed_v7_ifpa_onset_fixed_thr2p0_AFR   --label-suffix thr1.8   --train-start-year 2017 --train-end-year 2022   --calib-window-months 12   --mask-policy any   --budget 0.10   --topk 10
+11:07:33 [INFO] Shapes: X=(72, 12, 5, 1133, 904)  S=(36, 84, 1011)  M=(36, 84, 2)  mask_S=(36, 84, 1011)  (A=36 T=84 L=12)
+11:07:33 [INFO] Using label keys: h1:Y_1_thr1.8 / Ymask_1_thr1.8, h3:Y_3_thr1.8 / Ymask_3_thr1.8
+11:07:33 [INFO] Yearly stats (per horizon, for chosen label):
+11:07:33 [INFO] [H=1]
+ year  valid  positives  pos_rate
+ 2017     35          0  0.000000
+ 2018    420         12  0.028571
+ 2019    420         30  0.071429
+ 2020    420         18  0.042857
+ 2021    420         22  0.052381
+ 2022    420         10  0.023810
+ 2023    385          9  0.023377
+11:07:33 [INFO] [H=3]
+ year  valid  positives  pos_rate
+ 2017     35          0  0.000000
+ 2018    420         42  0.100000
+ 2019    420         94  0.223810
+ 2020    420         52  0.123810
+ 2021    420         66  0.157143
+ 2022    420         26  0.061905
+ 2023    315         23  0.073016
+11:07:33 [INFO] Train/Calib/Test summary:
+11:07:33 [INFO] [H=1] TRAIN  valid=2135  pos=92  pos_rate=0.0431
+11:07:33 [INFO] [H=1] CALIB  months=12  valid=420  pos=10  pos_rate=0.0238 
+11:07:33 [INFO] [H=1] TEST   year=2023  valid=385  pos=9  pos_rate=0.0234 
+11:07:33 [INFO] [H=3] TRAIN  valid=2135  pos=280  pos_rate=0.1311
+11:07:33 [INFO] [H=3] CALIB  months=12  valid=420  pos=26  pos_rate=0.0619 
+11:07:33 [INFO] [H=3] TEST   year=2023  valid=315  pos=23  pos_rate=0.0730 
+11:07:33 [INFO] Recommended class weighting (from TRAIN prevalence):
+11:07:33 [INFO] [H=1] pos_weight≈22.2  | focal_alpha≈0.95  (train pos_rate=0.0431)
+11:07:33 [INFO] [H=3] pos_weight≈6.6  | focal_alpha≈0.87  (train pos_rate=0.1311)
+11:07:33 [INFO] Budget b=10.0% → expected alerts per month ≈ A*b = 3.6 entries
+11:07:33 [INFO] [H=1] Tail mask ones (last 1 months) = 0 (expected 0)
+11:07:33 [INFO] [H=3] Tail mask ones (last 3 months) = 0 (expected 0)
+11:07:33 [WARNING] sample_index has horizon-duplicated rows: dup=2592
+11:07:33 [INFO] Train samples available (any): 2100 (dedup by win_idx,area_ord,t_end)
+11:07:33 [INFO] Top-10 countries by positives (TRAIN):
+11:07:33 [INFO]   [H=1] · [BEN] Benin  (count=6)
+11:07:33 [INFO]   [H=1] · [TUN] Tunisia  (count=5)
+11:07:33 [INFO]   [H=1] · [MWI] Malawi  (count=5)
+11:07:33 [INFO]   [H=1] · [TGO] Togo  (count=4)
+11:07:33 [INFO]   [H=1] · [GHA] Ghana  (count=4)
+11:07:33 [INFO]   [H=1] · [GNB] Guinea-Bissau  (count=4)
+11:07:33 [INFO]   [H=1] · [COG] Congo  (count=4)
+11:07:33 [INFO]   [H=1] · [MUS] Mauritius  (count=4)
+11:07:33 [INFO]   [H=1] · [SEN] Senegal  (count=4)
+11:07:33 [INFO]   [H=1] · [MAR] Morocco  (count=3)
+11:07:33 [INFO]   [H=3] · [BEN] Benin  (count=18)
+11:07:33 [INFO]   [H=3] · [TUN] Tunisia  (count=15)
+11:07:33 [INFO]   [H=3] · [MWI] Malawi  (count=15)
+11:07:33 [INFO]   [H=3] · [SEN] Senegal  (count=13)
+11:07:33 [INFO]   [H=3] · [TGO] Togo  (count=12)
+11:07:33 [INFO]   [H=3] · [GHA] Ghana  (count=12)
+11:07:33 [INFO]   [H=3] · [GNB] Guinea-Bissau  (count=12)
+11:07:33 [INFO]   [H=3] · [COG] Congo  (count=12)
+11:07:33 [INFO]   [H=3] · [MUS] Mauritius  (count=12)
+11:07:33 [INFO]   [H=3] · [MDG] Madagascar  (count=11)
+11:07:33 [INFO] Top-10 countries by positives (TEST):
+11:07:33 [INFO]   [H=1] · [MDG] Madagascar  (count=2)
+11:07:33 [INFO]   [H=1] · [NER] Niger  (count=2)
+11:07:33 [INFO]   [H=1] · [BEN] Benin  (count=1)
+11:07:33 [INFO]   [H=1] · [SEN] Senegal  (count=1)
+11:07:33 [INFO]   [H=1] · [MUS] Mauritius  (count=1)
+11:07:33 [INFO]   [H=1] · [AGO] Angola  (count=1)
+11:07:33 [INFO]   [H=1] · [TGO] Togo  (count=1)
+11:07:33 [INFO]   [H=1] · [ZWE] Zimbabwe  (count=0)
+11:07:33 [INFO]   [H=1] · [ZAF] South Africa  (count=0)
+11:07:33 [INFO]   [H=1] · [SLE] Sierra Leone  (count=0)
+11:07:33 [INFO]   [H=3] · [NER] Niger  (count=5)
+11:07:33 [INFO]   [H=3] · [MDG] Madagascar  (count=4)
+11:07:33 [INFO]   [H=3] · [BEN] Benin  (count=3)
+11:07:33 [INFO]   [H=3] · [TGO] Togo  (count=3)
+11:07:33 [INFO]   [H=3] · [MUS] Mauritius  (count=3)
+11:07:33 [INFO]   [H=3] · [AGO] Angola  (count=3)
+11:07:33 [INFO]   [H=3] · [SEN] Senegal  (count=2)
+11:07:33 [INFO]   [H=3] · [ZWE] Zimbabwe  (count=0)
+11:07:33 [INFO]   [H=3] · [ZAF] South Africa  (count=0)
+11:07:33 [INFO]   [H=3] · [SLE] Sierra Leone  (count=0)
+11:07:33 [INFO] [H=1] Monthly positives snapshot (head):
+      date  positives
+2017-01-01          0
+2017-02-01          0
+2017-03-01          0
+2017-04-01          0
+2017-05-01          0
+2017-06-01          0
+2017-07-01          0
+2017-08-01          0
+2017-09-01          0
+2017-10-01          0
+2017-11-01          0
+2017-12-01          0
+11:07:33 [INFO] [H=3] Monthly positives snapshot (head):
+      date  positives
+2017-01-01          0
+2017-02-01          0
+2017-03-01          0
+2017-04-01          0
+2017-05-01          0
+2017-06-01          0
+2017-07-01          0
+2017-08-01          0
+2017-09-01          0
+2017-10-01          0
+2017-11-01          0
+2017-12-01          0
+11:07:33 [INFO] Saved summary → data/processed_v7_ifpa_onset_fixed_thr2p0_AFR/preflight_v7_summary.json
+
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python train_v7.py   --exp-mode next_year   --proc-dir   data/processed_v7_ifpa_onset_fixed_thr2p0_AFR   --train-start-year 2017 --train-end-year 2022   --calib-window-months 12   --input-len 12 --mask-policy any   --patch-size 32 --embed-ch 8 --country-emb 12 --static-drop 0.6   --loss focal --focal-alpha 0.90 --focal-gamma 2.0   --th-policy youden --calibration platt --budget 0.10   --label-suffix 'thr1.8'   --sampler-h-ref auto   --min-train-pos-per-country 1   --device cuda:0 --epochs 6 --batch-size 8 --num-workers 8   --save-dir ckpt_v7_AFR_thr1p8_focal_youden_platt_b10   --save-preds --save-metrics
+11:10:16 [INFO] [NEXT] sampler auto → h3 (train pos=548)
+11:10:16 [INFO] TRAIN country filter: keep=35 drop=1 (min_k=1)
+11:10:16 [INFO] [NEXT] TRAIN country filter: keep=35 (min_k=1)
+11:10:16 [INFO] Model params = 24,571,982
+11:12:31 [INFO] [E001] mean AUPRC=0.183 | per-h: h1:0.081 h3:0.285              
+11:14:41 [INFO] [E002] mean AUPRC=0.223 | per-h: h1:0.113 h3:0.332              
+11:16:53 [INFO] [E003] mean AUPRC=0.219 | per-h: h1:0.086 h3:0.351              
+11:19:03 [INFO] [E004] mean AUPRC=0.220 | per-h: h1:0.085 h3:0.355              
+11:21:14 [INFO] [E005] mean AUPRC=0.222 | per-h: h1:0.087 h3:0.357              
+11:23:26 [INFO] [E006] mean AUPRC=0.216 | per-h: h1:0.089 h3:0.344              
+11:24:04 [INFO] TEST per-h metrics: h1: AUPRC=0.027 AUROC=0.496 Brier=0.023 ECE=0.001 Hit@b=0.000 | h3: AUPRC=0.321 AUROC=0.693 Brier=0.065 ECE=0.011 Hit@b=0.261
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS
+
+
+
+####
+
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python build_dataset_v7.py \
+  --npz          data/blacksea_tensor_log1p.npz \
+  --meta-json    data/blacksea_tensor_log1p.meta.json \
+  --sparse-pt    data/blacksea_sparse.pt \
+  --price-csv    data/raw/CPIs.csv \
+  --crops-csv    data/raw/Crops_and_livestock_products.csv \
+  --gdp-csv      data/raw/Value_of_Agricultural_Production.csv \
+  --wdi-xlsx     data/raw/WDI_wo_CPI_related.xlsx \
+  --raw-dir      data/raw \
+  --out-dir      data/processed_v7_ifpa_onset_fixed_thr18_md1_ref1 \
+  --window-len   12 \
+  --horizon      1 3 \
+  --scaler       robust \
+  --month-enc    cyclical \
+  --surge-mode   ifpa \
+  --ifpa-gamma   0.6 \
+  --ifpa-thr     1.8 \
+  --multi-thr    1.6,1.8,2.0 \
+  --label-timing onset \
+  --min-duration 1 \
+  --refractory   1 \
+  --baseline-mode  fixed \
+  --baseline-years 2000:2018 \
+  --vintage-interp ffill \
+  --cv-stride    0 \
+  --val-year     2022 \
+  --use-sparse \
+  --verbose
+11:43:58 [INFO] Sparse COO ➜ dense loaded (shape (84, 5, 1133, 904))
+11:44:01 [INFO] X_win torch.Size([72, 12, 5, 1133, 904])  windows=72
+11:44:08 [INFO] Countries=135
+11:44:15 [INFO] ✅ Finished → data/processed_v7_ifpa_onset_fixed_thr18_md1_ref1/20250810 (25.3s)                                                                                        
+
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python extract_subset_v7.py   --in-dir  data/processed_v7_ifpa_onset_fixed_thr18_md1_ref1/20250810   --out-dir data/processed_v7_ifpa_onset_fixed_thr18_md1_ref1_AFR
+11:46:00 [INFO] Loaded: A=135  T=84  horizons=[1, 3]
+11:46:00 [INFO] Filter size: 52 ISO3
+11:46:00 [INFO] ✓ Subset countries present in dataset: 36
+11:46:04 [INFO] ✓ Recomputed label_stats_yearly for subset.
+11:46:04 [INFO] Saved → /home/skmoon/codes/250727_WIP_AIS_new/data/processed_v7_ifpa_onset_fixed_thr18_md1_ref1_AFR
+11:46:04 [INFO] Top-10 kept countries:
+11:46:04 [INFO]  · [DZA] Algeria  (old:1 → new:0)
+11:46:04 [INFO]  · [AGO] Angola  (old:2 → new:1)
+11:46:04 [INFO]  · [BWA] Botswana  (old:14 → new:2)
+11:46:04 [INFO]  · [BDI] Burundi  (old:19 → new:3)
+11:46:04 [INFO]  · [CMR] Cameroon  (old:22 → new:4)
+11:46:04 [INFO]  · [CPV] Cabo Verde  (old:24 → new:5)
+11:46:04 [INFO]  · [CAF] Central African Republic  (old:25 → new:6)
+11:46:04 [INFO]  · [TCD] Chad  (old:27 → new:7)
+11:46:04 [INFO]  · [COG] Congo  (old:30 → new:8)
+11:46:04 [INFO]  · [BEN] Benin  (old:35 → new:9)
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python build_dataset_v7.py   --npz          data/blacksea_tensor_log1p.npz   --meta-json    data/blacksea_tensor_log1p.meta.json   --sparse-pt    data/blacksea_sparse.pt   --price-csv    data/raw/CPIs.csv   --crops-csv    data/raw/Crops_and_livestock_products.csv   --gdp-csv      data/raw/Value_of_Agricultural_Production.csv   --wdi-xlsx     data/raw/WDI_wo_CPI_related.xlsx   --raw-dir      data/raw   --out-dir      data/processed_v7_ifpa_onset_fixed_thr18_md1_ref1   --window-len   12   --horizon      1 3   --scaler       robust   --month-enc    cyclical   --surge-mode   ifpa   --ifpa-gamma   0.6   --ifpa-thr     1.8   --multi-thr    1.6,1.8,2.0   --label-timing onset   --min-duration 1   --refractory   1   --baseline-mode  fixed   --baseline-years 2000:2018   --vintage-interp ffill   --cv-stride    0   --val-year     2022   --use-sparse   --verbose^C
+
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python train_v7.py \
+  --exp-mode next_year \
+  --proc-dir   data/processed_v7_ifpa_onset_fixed_thr18_md1_ref1_AFR \
+  --train-start-year 2017 --train-end-year 2022 \
+  --calib-window-months 18 \
+  --input-len 12 --mask-policy any \
+  --patch-size 24 --embed-ch 12 --country-emb 16 --static-drop 0.5 \
+  --loss focal --focal-alpha 0.90 --focal-gamma 2.0 \
+  --h-weights 0.2 0.8 \
+  --th-policy budget --budget 0.10 --calibration none \
+  --label-suffix 'thr1.6' \
+  --sampler-h-ref auto \
+  --min-train-pos-per-country 1 \
+  --device cuda:0 --epochs 16 --batch-size 8 --num-workers 8 \
+  --save-dir ckpt_v7_AFR_thr1p8_focusH3_focal_b10_e16 \
+  --save-preds --save-metrics
+11:46:42 [INFO] h-weights=[0.2, 0.8]
+11:46:45 [INFO] [NEXT] sampler auto → h3 (train pos=346)
+11:46:45 [INFO] TRAIN country filter: keep=35 drop=1 (min_k=1)
+11:46:45 [INFO] [NEXT] TRAIN country filter: keep=35 (min_k=1)
+11:46:46 [INFO] Model params = 64,784,638
+11:48:09 [INFO] [E001] mean AUPRC=0.248 | per-h: h1:0.112 h3:0.384              
+11:49:28 [INFO] [E002] mean AUPRC=0.312 | per-h: h1:0.162 h3:0.462              
+11:50:47 [INFO] [E003] mean AUPRC=0.272 | per-h: h1:0.140 h3:0.405              
+11:52:07 [INFO] [E004] mean AUPRC=0.310 | per-h: h1:0.161 h3:0.460              
+11:53:26 [INFO] [E005] mean AUPRC=0.262 | per-h: h1:0.141 h3:0.382              
+11:54:45 [INFO] [E006] mean AUPRC=0.309 | per-h: h1:0.142 h3:0.475              
+11:56:05 [INFO] [E007] mean AUPRC=0.313 | per-h: h1:0.160 h3:0.466              
+11:57:24 [INFO] [E008] mean AUPRC=0.349 | per-h: h1:0.182 h3:0.515              
+11:58:43 [INFO] [E009] mean AUPRC=0.354 | per-h: h1:0.194 h3:0.514              
+12:00:03 [INFO] [E010] mean AUPRC=0.319 | per-h: h1:0.171 h3:0.466              
+12:01:22 [INFO] [E011] mean AUPRC=0.349 | per-h: h1:0.175 h3:0.522              
+12:02:41 [INFO] [E012] mean AUPRC=0.343 | per-h: h1:0.171 h3:0.514              
+12:04:01 [INFO] [E013] mean AUPRC=0.360 | per-h: h1:0.180 h3:0.540              
+12:05:20 [INFO] [E014] mean AUPRC=0.357 | per-h: h1:0.180 h3:0.533              
+12:06:40 [INFO] [E015] mean AUPRC=0.353 | per-h: h1:0.179 h3:0.527              
+12:07:59 [INFO] [E016] mean AUPRC=0.355 | per-h: h1:0.180 h3:0.529              
+12:08:24 [INFO] TEST per-h metrics: h1: AUPRC=0.039 AUROC=0.540 Brier=0.121 ECE=0.275 Hit@b=0.091 | h3: AUPRC=0.153 AUROC=0.587 Brier=0.151 ECE=0.217 Hit@b=0.259
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+
+
+
+
+####
+
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python train_v7.py \
+  --exp-mode next_year \
+  --proc-dir   data/processed_v7_ifpa_onset_fixed_thr2p0_AFR \
+  --train-start-year 2017 --train-end-year 2022 \
+  --calib-window-months 18 \
+  --input-len 12 --mask-policy any \
+  --patch-size 32 --embed-ch 8 --country-emb 8 --static-drop 0.5 \
+  --loss focal --focal-alpha 0.85 --focal-gamma 2.0 \
+  --h-weights 0.05 0.95 \
+  --val-metric h3_roc \
+  --th-policy budget --budget 0.10 --calibration none \
+  --label-suffix 'thr1.8' \
+  --sampler-h-ref 3 \
+  --min-train-pos-per-country 2 \
+  --lr 2e-4 --weight-decay 2e-2 \
+  --device cuda:0 --epochs 6 --patience 5 --batch-size 8 --num-workers 8 \
+  --save-dir ckpt_v7_AFR_thr18_focusH3_small_focal_h3roc_e10_s41 \
+  --save-preds --save-metrics --seed 41
+12:53:02 [INFO] h-weights=[0.05, 0.95]
+12:53:05 [INFO] TRAIN country filter: keep=35 drop=1 (min_k=2)
+12:53:05 [INFO] [NEXT] TRAIN country filter: keep=35 (min_k=2)
+12:53:06 [INFO] Model params = 24,571,830
+12:54:21 [INFO] [E001] val(h3_roc)=0.780 | per-h AUPRC: h1:0.129 h3:0.294       
+12:55:33 [INFO] [E002] val(h3_roc)=0.832 | per-h AUPRC: h1:0.129 h3:0.275       
+12:56:45 [INFO] [E003] val(h3_roc)=0.842 | per-h AUPRC: h1:0.136 h3:0.339       
+12:57:56 [INFO] [E004] val(h3_roc)=0.856 | per-h AUPRC: h1:0.143 h3:0.391       
+12:59:08 [INFO] [E005] val(h3_roc)=0.864 | per-h AUPRC: h1:0.136 h3:0.386       
+13:00:20 [INFO] [E006] val(h3_roc)=0.867 | per-h AUPRC: h1:0.142 h3:0.389       
+13:00:45 [INFO] TEST per-h metrics: h1: AUPRC=0.030 AUROC=0.549 Brier=0.164 ECE=0.371 Hit@b=0.111 | h3: AUPRC=0.213 AUROC=0.718 Brier=0.189 ECE=0.343 Hit@b=0.261
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+
+이 결과 합리적으로 분석.
+이때의 결과와 하이퍼파라미터랑, 현재 모델을 저장하고 싶음. 코드 추가해도 좋으니까 한번 더 같은 옵션으로 돌릴거니까 많은 정보를 저장할수 있는건 저장하고 재현가능할수 있게 많은 정보를 남겨줘. 현재 돌린 train 코드에서 (아래) 어디를 어떻게 수정할지 친절하게 설명.
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# ---------------------------------------------------------------------------- #
+#  train_v7.py – 2025-08-10 (EWS 논문용, v7 철학 반영)                           #
+#  • v7 데이터셋과 호환 (time_index, area_order, label_stats 등 활용)            #
+#  • 실험 모드:
+#     - next_year : (Y0~Y1)로 학습/튜닝 → (Y1+1) 평가 (논문 실험 설계)          #
+#     - fixed     : build에서 저장된 splits.pt(train/val/test) 사용             #
+#     - walkforward : 오리진별(월) 학습/튜닝 → 해당 월 OOS                       #
+#  • 입력 길이 L 가변 (--input-len), 마스크 정책(all/any)                        #
+#  • 임계 정책(F1/Youden/Budget/Cost), 캘리브레이션(Platt/Isotonic)              #
+#  • 월별 OOS 곡선/예산 기반 지표/예측 저장                                      #
+#  • 멀티-임계 라벨 선택 지원(--label-suffix, 예: 'thr2.5')                      #
+# ---------------------------------------------------------------------------- #
+
+from __future__ import annotations
+from pathlib import Path
+from typing import Dict, List, Tuple, Optional
+
+import argparse, json, logging, random, time
+import numpy as np
+import pandas as pd
+import torch
+from torch import nn, optim
+import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
+import pyarrow.parquet as pq
+import pyarrow as pa
+from tqdm import tqdm
+
+from sklearn.metrics import roc_auc_score, average_precision_score
+from sklearn.isotonic import IsotonicRegression
+from sklearn.linear_model import LogisticRegression
+
+from model_v7 import build_model_v7  # 같은 폴더에 두세요
+
+LOG = logging.getLogger("train_v7")
+logging.basicConfig(level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
+
+# ─────────────────────── 1) CLI ─────────────────────────────────────────── #
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    # ----- 필수 경로 ----- #
+    p.add_argument("--proc-dir",   type=Path, required=True,
+                   help="ex) data/processed_v7_ifpa/20250810")
+    p.add_argument("--save-dir",   type=Path,  default=Path("./ckpt_v7"))
+
+    # ----- 실험 모드 ----- #
+    p.add_argument("--exp-mode", choices=["next_year","fixed","walkforward"],
+                   default="next_year",
+                   help="논문 설계는 next_year 권장")
+    # next_year 설정
+    p.add_argument("--train-start-year", type=int, default=2017)
+    p.add_argument("--train-end-year",   type=int, default=2022,
+                   help="학습/튜닝 데이터 종단 연도(포함). 평가연도는 자동으로 +1")
+    p.add_argument("--calib-window-months", type=int, default=6,
+                   help="튜닝(임계/캘리브레이션)에 사용할 최신 월 수(학습 종단연도 내)")
+    # walkforward 설정
+    p.add_argument("--wf-stride",  type=int, default=1,   help="WF 오리진 간격(월)")
+    p.add_argument("--wf-window",  type=int, default=-1,
+                   help="-1=확장창, 양수=슬라이딩창 길이(개월)")
+    p.add_argument("--wf-val-window", type=int, default=6,
+                   help="WF에서 오리진 직전 검증 월 수(캘리브레이션/임계 추정)")
+
+    # ----- 모델/학습 하이퍼 ----- #
+    p.add_argument("--epochs",     type=int,   default=12)
+    p.add_argument("--batch-size", type=int,   default=16)
+    p.add_argument("--lr",         type=float, default=3e-4)
+    p.add_argument("--weight-decay", type=float, default=1e-2)
+    p.add_argument("--patience",   type=int,   default=6)
+    p.add_argument("--seed",       type=int,   default=42)
+    p.add_argument("--device",     type=str,   default="cuda:0")
+    p.add_argument("--num-workers",type=int,   default=4)
+
+    # ----- 입력 길이/마스크 정책 ----- #
+    p.add_argument("--input-len",  type=int,   default=None,
+                   help="사용할 과거 AIS 길이 L (기본: dataset_meta.window_len)")
+    p.add_argument("--mask-policy", choices=["all","any"], default="all",
+                   help="all=모든 horizon 유효샘플만, any=남기되 로스에서 마스크 적용")
+
+    # ----- 멀티-임계 라벨 선택(선택) ----- #
+    p.add_argument("--label-suffix", type=str, default="",
+                   help="예: 'thr2.5' → Y_1_thr2.5 / Ymask_1_thr2.5 사용")
+
+    # ----- 모델 하이퍼 ----- #
+    p.add_argument("--patch-size", type=int, default=24)
+    p.add_argument("--embed-ch",   type=int, default=12)
+    p.add_argument("--country-emb",type=int, default=16)
+    p.add_argument("--static-drop",type=float,default=0.5)
+
+    # ----- 손실 ----- #
+    p.add_argument("--loss", choices=["focal","pos_bce"], default="pos_bce")
+    p.add_argument("--pos-weight", type=float, default=1.0,
+                   help="pos_bce에서 양성가중치. 샘플러와 병용 시 1.0 권장")
+    p.add_argument("--focal-gamma",type=float, default=2.0)
+    p.add_argument("--focal-alpha",type=float, default=0.30)
+    p.add_argument("--h-weights",  type=float, nargs="*", default=None,
+                   help="멀티-h 로스 가중치. 미지정 시 균등")
+
+    p.add_argument("--val-metric", choices=["mean_prc","h3_prc","h3_roc"],
+                default="mean_prc",
+                help="얼리스탑/베스트 스냅샷 선택 지표")
+
+    # ----- 임계/캘리브레이션 ----- #
+    p.add_argument("--th-policy",  choices=["f1","youden","budget","cost"], default="budget")
+    p.add_argument("--budget",     type=float, default=0.05,
+                   help="상위 b 비율 경보(0~1). 논문은 보통 1~10% 범위 보고")
+    p.add_argument("--cost-fn",    type=float, default=5.0)
+    p.add_argument("--cost-fp",    type=float, default=1.0)
+    p.add_argument("--calibration",choices=["none","platt","isotonic"], default="none")
+
+    # ── 새 옵션: 샘플러 기준 horizon / 훈련에서만 국가 필터 ────────────────
+    p.add_argument("--sampler-h-ref", type=str, default="auto",
+                   help="훈련용 샘플 가중치 계산에 쓸 horizon. 'auto'면 TRAIN 범위에서 양성수가 가장 많은 horizon을 자동 선택")
+    p.add_argument("--min-train-pos-per-country", type=int, default=0,
+                   help="훈련(TRAIN)에서만 적용: 샘플러 horizon 기준 양성 개수가 이 값보다 작은 국가는 훈련 배제(VAL/TEST는 유지). 0이면 비활성")
+
+    # ----- 저장 ----- #
+    p.add_argument("--save-preds",   action="store_true")
+    p.add_argument("--save-metrics", action="store_true")
+    p.add_argument("--save-calib",   action="store_true")
+
+    return p.parse_args()
+
+# ─────────────────────── 2) Utils ───────────────────────────────────────── #
+def seed_everything(seed:int):
+    torch.manual_seed(seed); np.random.seed(seed); random.seed(seed)
+    torch.backends.cudnn.deterministic=True
+    torch.backends.cudnn.benchmark=False
+
+def brier_score(y_true, y_prob, mask=None):
+    if mask is not None:
+        y_true = y_true[mask]; y_prob = y_prob[mask]
+    if y_true.size == 0: return np.nan
+    return float(np.mean((y_prob - y_true)**2))
+
+def _dedup(df: pd.DataFrame) -> pd.DataFrame:
+    return df.drop_duplicates(subset=["win_idx","area_ord","t_end"]).reset_index(drop=True)
+
+
+def _choose_sampler_h(df_train: pd.DataFrame,
+                      labels: Dict[int, np.ndarray],
+                      ymasks: Dict[int, np.ndarray],
+                      horizons: List[int]) -> tuple[int, int]:
+    """TRAIN 구간에서 양성이 가장 많은 horizon을 선택."""
+    if len(df_train) == 0:
+        return horizons[0], 0
+    best_h, best_pos = horizons[0], -1
+    a = df_train["area_ord"].to_numpy()
+    t = df_train["t_end"].to_numpy()
+    for h in horizons:
+        y = labels[h][a, t]
+        m = ymasks[h][a, t].astype(bool)
+        pos = int((y[m] == 1).sum())
+        if pos > best_pos:
+            best_pos, best_h = pos, h
+    return best_h, best_pos
+
+def _filter_train_countries(df_train: pd.DataFrame,
+                            labels: Dict[int, np.ndarray],
+                            ymasks: Dict[int, np.ndarray],
+                            h_ref: int,
+                            min_k: int) -> tuple[pd.DataFrame, list[int]]:
+    """훈련셋에서만 적용: h_ref 기준 국가별 양성 수 < min_k 인 국가는 제거."""
+    if min_k <= 0 or len(df_train) == 0:
+        return df_train, sorted(df_train["area_ord"].unique().tolist())
+    a = df_train["area_ord"].to_numpy()
+    t = df_train["t_end"].to_numpy()
+    y = labels[h_ref][a, t]
+    m = ymasks[h_ref][a, t].astype(bool)
+    is_pos = ((y == 1) & m).astype(np.int32)
+
+    counts = {}
+    for area, flag in zip(a, is_pos):
+        counts[area] = counts.get(area, 0) + int(flag)
+
+    kept = {area for area, c in counts.items() if c >= min_k}
+    if not kept:
+        # 모두 날아가면 위험하니 필터 무시
+        return df_train, sorted(counts.keys())
+    out = df_train[df_train["area_ord"].isin(kept)].reset_index(drop=True)
+    return out, sorted(kept)
+
+def ece_score(y_true, y_prob, mask=None, n_bins=10):
+    if mask is not None:
+        y_true = y_true[mask]; y_prob = y_prob[mask]
+    if y_true.size == 0: return np.nan
+    bins = np.linspace(0.0, 1.0, n_bins+1)
+    idx  = np.digitize(y_prob, bins) - 1
+    ece = 0.0
+    for b in range(n_bins):
+        sel = (idx==b)
+        if not np.any(sel): continue
+        conf = y_prob[sel].mean()
+        acc  = y_true[sel].mean()
+        ece += (sel.mean()) * abs(acc - conf)
+    return float(ece)
+
+def youden_threshold(y_true, y_prob):
+    if y_true.size == 0: return 0.5
+    qs = np.unique(np.quantile(y_prob, np.linspace(0,1,200)))
+    best_t, best_j = 0.5, -1
+    P = (y_true==1).sum(); N = (y_true==0).sum()
+    for t in qs:
+        pred = (y_prob >= t)
+        tp = (pred & (y_true==1)).sum()
+        fn = P - tp
+        fp = pred.sum() - tp
+        tn = N - fp
+        tpr = tp / max((tp+fn),1)
+        fpr = fp / max((fp+tn),1)
+        j = tpr - fpr
+        if j > best_j:
+            best_j, best_t = j, t
+    return float(best_t)
+
+def f1_threshold(y_true, y_prob):
+    if y_true.size == 0: return 0.5
+    qs = np.unique(np.quantile(y_prob, np.linspace(0,1,200)))
+    best_t, best_f1 = 0.5, -1
+    for t in qs:
+        pred = (y_prob >= t)
+        tp = (pred & (y_true==1)).sum()
+        fp = pred.sum() - tp
+        fn = (y_true==1).sum() - tp
+        f1 = 2*tp / max(2*tp + fp + fn, 1)
+        if f1 > best_f1:
+            best_f1, best_t = f1, t
+    return float(best_t)
+
+def cost_threshold(y_true, y_prob, c_fn=5.0, c_fp=1.0):
+    if y_true.size == 0: return 0.5
+    qs = np.unique(np.quantile(y_prob, np.linspace(0,1,200)))
+    best_t, best_cost = 0.5, 1e18
+    P = (y_true==1).sum()
+    for t in qs:
+        pred = (y_prob >= t)
+        tp = (pred & (y_true==1)).sum()
+        fp = pred.sum() - tp
+        fn = P - tp
+        cost = c_fn*fn + c_fp*fp
+        if cost < best_cost:
+            best_cost, best_t = cost, t
+    return float(best_t)
+
+def budget_threshold(y_prob, budget=0.05):
+    if y_prob.size == 0: return 1.0
+    q = np.clip(1.0 - float(budget), 0.0, 1.0)
+    return float(np.quantile(y_prob, q))
+
+class _IdentityCalib:
+    def fit(self, p, y): return self
+    def predict(self, p): return p
+
+class _PlattCalib:
+    def __init__(self): self.lr = LogisticRegression(solver="lbfgs")
+    def fit(self, p, y):
+        if len(np.unique(y)) < 2 or len(y) < 20:
+            return self
+        p = np.clip(p, 1e-6, 1-1e-6)
+        self.lr.fit(p.reshape(-1,1), y)
+        return self
+    def predict(self, p):
+        p = np.clip(p, 1e-6, 1-1e-6)
+        try:
+            return self.lr.predict_proba(p.reshape(-1,1))[:,1]
+        except Exception:
+            return p
+
+class _IsoCalib:
+    def __init__(self): self.iso = IsotonicRegression(out_of_bounds="clip")
+    def fit(self, p, y):
+        if len(np.unique(y)) < 2 or len(y) < 20:
+            return self
+        self.iso.fit(p, y); return self
+    def predict(self, p):
+        try:   return self.iso.predict(p)
+        except Exception: return p
+
+def build_calibrator(name:str):
+    if name=="none":     return _IdentityCalib()
+    if name=="platt":    return _PlattCalib()
+    if name=="isotonic": return _IsoCalib()
+    raise ValueError
+
+def month_index_from_meta(meta_json: Path) -> pd.DatetimeIndex:
+    meta = json.loads(meta_json.read_text())
+    vals = meta.get("time_index", None)
+    if vals is not None:
+        try:
+            return pd.to_datetime(vals, format="%Y%m", utc=True)
+        except Exception:
+            return pd.to_datetime(vals, utc=True)
+    T = int(meta.get("T", 0))
+    start_ts = pd.Timestamp("2000-01-01", tz="UTC")
+    return pd.date_range(start_ts.normalize(), periods=T, freq="MS", tz="UTC")
+
+# ─────────────────────── 3) Dataset ─────────────────────────────────────── #
+# ── dataset/dataloader (drop-in) ────────────────────────────────────────────
+class VesselDatasetV7(Dataset):
+    def __init__(self, feats, labels, ymasks, sample_df, horizons, phase,
+                 device, input_len: Optional[int],mask_policy: str = "all", sampler_h: int | None = None):
+        super().__init__()
+        self.X  = feats["X"]
+        self.S  = feats["S"].float()
+        self.M  = feats["M"].float()
+        self.Mk = feats["mask_S"].float()
+        self.labels = labels
+        self.y_masks= ymasks
+        self.h_list = horizons
+        self.df  = sample_df.reset_index(drop=True)
+        self.phase = phase
+        self.device = device
+        self.Lmax  = self.X.shape[1]
+        self.L     = input_len if input_len is not None else self.Lmax
+        assert 1 <= self.L <= self.Lmax
+        if phase == "train":
+            h_ref = sampler_h if sampler_h is not None else self.h_list[0]            
+            y_ref = self.labels[h_ref][self.df.area_ord, self.df.t_end]
+            m_ref = self.y_masks[h_ref][self.df.area_ord, self.df.t_end].astype(bool)
+            pos = (y_ref[m_ref]==1).sum()
+            neg = (m_ref.sum() - (y_ref[m_ref]==1).sum())
+            w_pos = (neg / max(pos,1))
+            valid_any = np.zeros(len(self.df), dtype=bool)
+            for h in self.h_list:
+                valid_any |= self.y_masks[h][self.df.area_ord, self.df.t_end].astype(bool)
+            base_w = np.where(y_ref==1, w_pos, 1.).astype(np.float64)
+            if mask_policy == "any":
+                base_w = base_w * valid_any.astype(np.float64)
+            self.weights = base_w
+        else:
+            self.weights = None
+    def __len__(self): return len(self.df)
+    def __getitem__(self, i:int):
+        row = self.df.iloc[i]
+        widx, cidx, t_end = int(row.win_idx), int(row.area_ord), int(row.t_end)
+        X_dyn_full = self.X[widx]
+        X_dyn = X_dyn_full[-self.L:]
+        S_val  = self.S[cidx, t_end]
+        S_mask = self.Mk[cidx, t_end]
+        m_rep  = self.M[cidx, t_end]
+        y_vec   = torch.tensor([self.labels[h][cidx, t_end] for h in self.h_list], dtype=torch.float32)
+        ymask_v = torch.tensor([self.y_masks[h][cidx, t_end] for h in self.h_list], dtype=torch.float32)
+        return X_dyn, S_val, S_mask, m_rep, y_vec, ymask_v, torch.tensor(cidx), torch.tensor(t_end)
+
+def build_loader(df: pd.DataFrame, feats, labels, ymasks,
+                 horizons, phase, args, sampler_h: int | None = None):
+    ds = VesselDatasetV7(feats, labels, ymasks, df, horizons, phase,
+                         torch.device(args.device), args.input_len, args.mask_policy,
+                         sampler_h=sampler_h)
+    if phase == "train":
+        w = torch.as_tensor(ds.weights, dtype=torch.double)
+        sampler = WeightedRandomSampler(w, num_samples=len(ds), replacement=True)
+        return DataLoader(ds, batch_size=args.batch_size, sampler=sampler,
+                          num_workers=args.num_workers, pin_memory=True, drop_last=False)
+    else:
+        return DataLoader(ds, batch_size=args.batch_size, shuffle=False,
+                          num_workers=max(1, args.num_workers//2),
+                          pin_memory=True, drop_last=False)
+
+def _choose_sampler_h(df_train: pd.DataFrame, labels, ymasks, horizons: List[int]) -> Tuple[int, int]:
+    best_h, best_pos = horizons[0], -1
+    for h in horizons:
+        y = labels[h][df_train.area_ord, df_train.t_end]
+        m = ymasks[h][df_train.area_ord, df_train.t_end].astype(bool)
+        cnt = int((y[m]==1).sum())
+        if cnt > best_pos:
+            best_pos, best_h = cnt, h
+    return best_h, best_pos
+
+def _filter_train_countries(df_train: pd.DataFrame, labels, ymasks,
+                            sampler_h: int, min_k: int) -> Tuple[pd.DataFrame, List[int]]:
+    if min_k <= 0 or len(df_train)==0:
+        return df_train, []
+    y = labels[sampler_h][df_train.area_ord, df_train.t_end]
+    m = ymasks[sampler_h][df_train.area_ord, df_train.t_end].astype(bool)
+    arr_pos = ((y==1) & m)
+    tmp = df_train.copy()
+    tmp["_pos"] = arr_pos
+    pos_by_area = tmp.groupby("area_ord")["_pos"].sum().astype(int)
+    keep_areas = pos_by_area[pos_by_area >= min_k].index.astype(int).tolist()
+    df_out = df_train[df_train.area_ord.isin(keep_areas)].copy()
+    drop_cnt = len(set(df_train.area_ord.unique()) - set(keep_areas))
+    LOG.info(f"TRAIN country filter: keep={len(keep_areas)} drop={drop_cnt} (min_k={min_k})")
+    return df_out, keep_areas
+
+# ─────────────────────── 4) Loss & Eval ─────────────────────────────────── #
+def masked_bce_loss(logits: torch.Tensor, y: torch.Tensor, ymask: torch.Tensor,
+                    h_weights: Optional[List[float]], loss_kind: str,
+                    pos_weight: float, focal_gamma: float, focal_alpha: float):
+    B,H = logits.shape
+    if loss_kind == "focal":
+        base = F.binary_cross_entropy_with_logits(logits, y, reduction="none")
+        p_t  = torch.sigmoid(logits)
+        p_t  = y * p_t + (1 - y) * (1 - p_t)
+        loss = (y * focal_alpha + (1 - y) * (1 - focal_alpha)) \
+               * (1 - p_t).pow(focal_gamma) * base
+    else:
+        pw = torch.tensor([pos_weight], dtype=logits.dtype, device=logits.device)
+        loss = F.binary_cross_entropy_with_logits(logits, y, reduction="none",
+                                                  pos_weight=pw)
+
+    loss = loss * ymask  # vintage-safe mask
+    if h_weights is not None:
+        hw = torch.tensor(h_weights, dtype=logits.dtype, device=logits.device).view(1,-1)
+        loss = loss * hw
+    denom = torch.clamp(ymask.sum(), min=1.0)
+    return loss.sum() / denom
+
+@torch.no_grad()
+def collect_probs(loader, model, device, horizons, calibrators=None):
+    model.eval()
+    ys, ms, ps, t_idx, area_idx = [], [], [], [], []
+    for batch in tqdm(loader, ncols=80, leave=False, desc="EVAL"):
+        X,Sv,Sm,Mv,y,ymask,cidx,t_end = batch
+        X      = X.to(device, non_blocking=True)
+        Sv     = Sv.to(device, non_blocking=True)
+        Sm     = Sm.to(device, non_blocking=True)
+        Mv     = Mv.to(device, non_blocking=True)
+        cidx   = cidx.to(device, non_blocking=True)
+
+        with torch.amp.autocast('cuda' if device.type=='cuda' else 'cpu', dtype=torch.float16):
+            out   = model(X, Sv, Sm, Mv, cidx)
+            logits= torch.stack([out[f"h{h}"] for h in horizons], dim=1)
+            prob  = torch.sigmoid(logits).detach().cpu().numpy()
+
+        y      = y.detach().cpu().numpy()
+        ymask  = ymask.detach().cpu().numpy()
+        if calibrators is not None:
+            for j,_ in enumerate(horizons):
+                prob[:,j] = calibrators[j].predict(prob[:,j])
+
+        ys.append(y); ms.append(ymask); ps.append(prob)
+        t_idx.append(t_end.numpy()); area_idx.append(cidx.cpu().numpy())
+
+    ys = np.concatenate(ys,0); ms = np.concatenate(ms,0); ps = np.concatenate(ps,0)
+    t_idx = np.concatenate(t_idx,0); area_idx = np.concatenate(area_idx,0)
+    return ys, ms, ps, t_idx, area_idx
+
+def compute_table_metrics(y, m, p):
+    H = y.shape[1]; out={}
+    for j in range(H):
+        mask = m[:,j].astype(bool)
+        yt, pt = y[:,j][mask], p[:,j][mask]
+        if yt.size == 0:
+            out[j] = {"roc": np.nan, "prc": np.nan, "brier": np.nan, "ece": np.nan}
+            continue
+        try:
+            roc = roc_auc_score(yt, pt)
+        except ValueError:
+            roc = np.nan
+        prc = average_precision_score(yt, pt) if yt.sum()>0 else np.nan
+        brier = brier_score(yt, pt)
+        ece   = ece_score(yt, pt)
+        out[j] = {"roc":float(roc),"prc":float(prc),"brier":brier,"ece":ece}
+    return out
+
+def select_thresholds(val_y, val_m, val_p, horizons, policy, budget, cost_fn, cost_fp):
+    ths=[]
+    for j,_ in enumerate(horizons):
+        mask = val_m[:,j].astype(bool)
+        yt, pt = val_y[:,j][mask], val_p[:,j][mask]
+        if policy=="f1":      t = f1_threshold(yt, pt)
+        elif policy=="youden":t = youden_threshold(yt, pt)
+        elif policy=="budget":t = budget_threshold(pt, budget)
+        elif policy=="cost":  t = cost_threshold(yt, pt, c_fn=cost_fn, c_fp=cost_fp)
+        else: t = 0.5
+        ths.append(float(t))
+    return ths
+
+def budget_metrics(y, m, p, budget):
+    mask = m.astype(bool)
+    yt, pt = y[mask], p[mask]
+    if yt.size==0: return np.nan, np.nan
+    thr = budget_threshold(pt, budget)
+    pred = (pt >= thr)
+    tp = (pred & (yt==1)).sum()
+    pos= (yt==1).sum()
+    hit = tp / max(pos,1)
+    fa  = (pred & (yt==0)).sum()
+    fa_per_100 = fa / (len(yt)/100.0)
+    return float(hit), float(fa_per_100)
+
+# ─────────────────────── 5) 공통 로더/라벨 ──────────────────────────────── #
+def _suffixize(base:str, suffix:str)->str:
+    s = suffix.strip()
+    if s == "": return base
+    if not s.startswith("thr"): s = f"thr{s}"
+    return f"{base}_{s}"
+
+def load_feats_labels(proc_dir: Path, label_suffix: str):
+    feat_pt  = torch.load(proc_dir / "features.pt", map_location="cpu", weights_only=False)
+    feats = {k: v.contiguous() for k,v in feat_pt.items()}  # X,S,M,mask_S
+    meta = json.load(open(proc_dir / "dataset_meta.json"))
+    horizons: List[int] = sorted(meta["horizons"])
+    n_country: int      = meta["n_countries"]
+    month_dim: int      = feats["M"].shape[-1]
+    static_dim: int     = feats["S"].shape[-1]
+    Lmax: int           = feats["X"].shape[1]
+    dates               = month_index_from_meta(proc_dir / "dataset_meta.json")
+    df_idx              = pq.read_table(proc_dir / "sample_index.parquet").to_pandas()
+
+    labels_npz = np.load(proc_dir / "labels_all.npz")
+    labels = {}
+    ymasks = {}
+    for h in horizons:
+        yk  = _suffixize(f"Y_{h}",     label_suffix)
+        mk  = _suffixize(f"Ymask_{h}", label_suffix)
+        if yk not in labels_npz or mk not in labels_npz:
+            raise KeyError(f"labels_all.npz에 '{yk}' 또는 '{mk}'가 없습니다. (--label-suffix 확인)")
+        labels[h] = labels_npz[yk]
+        ymasks[h] = labels_npz[mk]
+
+    return feats, meta, horizons, n_country, month_dim, static_dim, Lmax, dates, df_idx, labels, ymasks
+
+def filter_by_mask_policy(df: pd.DataFrame, ymasks: Dict[int, np.ndarray],
+                          horizons: List[int], policy: str) -> pd.DataFrame:
+    if policy == "all":
+        keep = np.ones(len(df), dtype=bool)
+        for h in horizons:
+            keep &= ymasks[h][df.area_ord, df.t_end].astype(bool)
+        return df[keep]
+    else:
+        return df
+
+# ─────────────────────── 6) Train 루프 ──────────────────────────────────── #
+def train_model(loaders, model, args, device):
+    loss_kind = "focal" if args.loss=="focal" else "pos_bce"
+    opt   = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    sched = optim.lr_scheduler.CosineAnnealingLR(opt, T_max=args.epochs)
+    try:
+        scaler = torch.amp.GradScaler('cuda')
+    except Exception:
+        scaler = torch.cuda.amp.GradScaler()
+
+    best_val, best_state, stale = -1e18, None, 0
+    h_weights = args.h_weights
+    horizons  = model.horizons
+
+    for ep in range(1, args.epochs+1):
+        # ---- train ----
+        model.train()
+        loop = tqdm(loaders["train"], ncols=80, leave=False, desc=f"TRAIN {ep:02d}")
+        for batch in loop:
+            X,Sv,Sm,Mv,y,ymask,cidx,_ = batch
+            X,Sv,Sm,Mv,cidx,y,ymask = (X.to(device), Sv.to(device), Sm.to(device),
+                                       Mv.to(device), cidx.to(device),
+                                       y.to(device), ymask.to(device))
+            opt.zero_grad(set_to_none=True)
+            with torch.amp.autocast('cuda' if device.type=='cuda' else 'cpu', dtype=torch.float16):
+                out   = model(X, Sv, Sm, Mv, cidx)
+                logits= torch.stack([out[f"h{h}"] for h in horizons], dim=1)
+                loss  = masked_bce_loss(logits, y, ymask, h_weights, loss_kind,
+                                        args.pos_weight, args.focal_gamma, args.focal_alpha)
+            scaler.scale(loss).backward()
+            scaler.step(opt); scaler.update()
+            loop.set_postfix(loss=f"{loss.item():.4f}")
+        sched.step()
+
+        # ---- val ----
+        yv, mv, pv, _, _ = collect_probs(loaders["val"], model, device, horizons)
+
+        mets = compute_table_metrics(yv, mv, pv)
+        # 선택 지표 산출
+        if args.val_metric == "mean_prc":
+            score = np.nanmean([m["prc"] for m in mets.values()])
+        elif args.val_metric == "h3_prc":
+            j = horizons.index(3) if 3 in horizons else 0
+            score = mets[j]["prc"]
+        else:  # "h3_roc"
+            j = horizons.index(3) if 3 in horizons else 0
+            score = mets[j]["roc"]
+        LOG.info(f"[E{ep:03d}] val({args.val_metric})={score:.3f} | per-h AUPRC: "
+                 + " ".join([f"h{h}:{mets[i]['prc']:.3f}" for i,h in enumerate(horizons)]))
+        if (best_state is None) or (score >= best_val):
+            best_val, best_state, stale = score, {k:v.cpu() for k,v in model.state_dict().items()}, 0
+
+
+        else:
+            stale += 1
+            if stale >= args.patience:
+                LOG.info("Early-stopping"); break
+
+    model.load_state_dict(best_state)
+    return model
+
+# ─────────────────────── 7) 모드: next_year ─────────────────────────────── #
+def run_next_year(args):
+    device = torch.device(args.device)
+    seed_everything(args.seed)
+    args.save_dir.mkdir(parents=True, exist_ok=True)
+
+    feats, meta, horizons, n_country, month_dim, static_dim, Lmax, dates, df_idx, labels, ymasks = \
+        load_feats_labels(args.proc_dir, args.label_suffix)
+    if args.input_len is None: args.input_len = Lmax
+
+    # 연도 마스킹
+    y0, y1 = args.train_start_year, args.train_end_year
+    y_test = y1 + 1
+    if (dates.year.min() > y0) or (dates.year.max() < y_test):
+        LOG.warning("요청 연도가 데이터 범위를 벗어날 수 있습니다: %s~%s vs dataset %s~%s",
+                    y0, y_test, dates.year.min(), dates.year.max())
+
+    # t_end 인덱스
+    t_train = np.where((dates.year >= y0) & (dates.year <= y1))[0]
+    t_test  = np.where(dates.year == y_test)[0]
+    if len(t_test)==0:
+        raise SystemExit(f"평가연도 {y_test} 가 데이터에 없습니다.")
+
+    # 학습/튜닝에서 라벨 누수 금지: t_end + h_max ≤ max(t_train) 조건
+    h_max = max(horizons)
+    t_train_cut = t_train[t_train + h_max <= t_train.max()]
+    # 튜닝(임계/캘리브레이션)용: 학습 종단연도 내 마지막 k개월
+    k = int(args.calib_window_months)
+    last_months = sorted(t_train_cut[t_train_cut >= (t_train_cut.max() - (k-1))])
+
+    # DataFrame 슬라이싱
+    def slice_df(ts: np.ndarray) -> pd.DataFrame:
+        sub = df_idx[df_idx.t_end.isin(ts)]
+        return filter_by_mask_policy(sub, ymasks, horizons, args.mask_policy)
+
+    df_train = slice_df(t_train_cut)
+    df_val   = slice_df(np.array(last_months, dtype=int))
+    df_test  = slice_df(t_test)
+
+    df_train = _dedup(df_train)
+    df_val   = _dedup(df_val)
+    df_test  = _dedup(df_test)
+
+    # 1) 샘플러 horizon 결정
+    if str(args.sampler_h_ref).strip().lower() == "auto":
+        sampler_h, pos_cnt = _choose_sampler_h(df_train, labels, ymasks, horizons)
+        LOG.info(f"[NEXT] sampler auto → h{sampler_h} (train pos={pos_cnt})")
+    else:
+        try:
+            sampler_h = int(args.sampler_h_ref)
+            if sampler_h not in horizons: raise ValueError
+        except Exception:
+            sampler_h, pos_cnt = _choose_sampler_h(df_train, labels, ymasks, horizons)
+            LOG.warning(f"[NEXT] invalid --sampler-h-ref → auto fallback: h{sampler_h}")
+
+    # 2) TRAIN 국가 필터(훈련 데이터에만 적용)
+    if args.min_train_pos_per_country and args.min_train_pos_per_country > 0:
+        df_train, kept_areas = _filter_train_countries(
+            df_train, labels, ymasks, sampler_h, args.min_train_pos_per_country
+        )
+        LOG.info(f"[NEXT] TRAIN country filter: keep={len(kept_areas)} (min_k={args.min_train_pos_per_country})")
+
+    loaders = {
+        "train": build_loader(df_train, feats, labels, ymasks, horizons, "train", args, sampler_h),
+        "val":   build_loader(df_val, feats, labels, ymasks, horizons, "val",   args),
+        "test":  build_loader(df_test,  feats, labels, ymasks, horizons, "val",   args),
+    }
+
+    # 모델
+    _, _, C, H, W = feats["X"].shape
+    model = build_model_v7(
+        in_ch=C, img_h=H, img_w=W,
+        d_s_val=static_dim, d_s_mask=static_dim,
+        month_dim=month_dim, n_country=n_country,
+        horizons=horizons,
+        patch_size=args.patch_size, embed_ch=args.embed_ch,
+        country_emb_dim=args.country_emb,
+        dropout_static=args.static_drop,
+        device=device
+    )
+    LOG.info(f"Model params = {sum(p.numel() for p in model.parameters()):,}")
+
+    # 학습
+    model = train_model(loaders, model, args, device)
+
+    # 캘리브레이션/임계(튜닝 윈도우에서)
+    val_y, val_m, val_p, _, _ = collect_probs(loaders["val"], model, device, horizons)
+    calibrators=[]
+    for j,_ in enumerate(horizons):
+        cal = build_calibrator(args.calibration)
+        mask = val_m[:,j].astype(bool)
+        calibrators.append(cal.fit(val_p[:,j][mask], val_y[:,j][mask]))
+
+    # 테스트
+    test_y, test_m, test_p, t_end, a_ord = collect_probs(loaders["test"], model, device, horizons, calibrators)
+    table = compute_table_metrics(test_y, test_m, test_p)
+
+    # 예산 기반
+    for j,h in enumerate(horizons):
+        hit, fa100 = budget_metrics(test_y[:,j], test_m[:,j], test_p[:,j], args.budget)
+        table[j]["hit@b"] = hit; table[j]["fa@b"] = fa100
+    LOG.info("TEST per-h metrics: " + " | ".join([
+        f"h{h}: AUPRC={table[j]['prc']:.3f} AUROC={table[j]['roc']:.3f} "
+        f"Brier={table[j]['brier']:.3f} ECE={table[j]['ece']:.3f} Hit@b={table[j]['hit@b']:.3f}"
+        for j,h in enumerate(horizons)
+    ]))
+
+    # 월별 OOS 통계(테스트 연도)
+    test_dates = dates[t_end]
+    per_month=[]
+    for j,h in enumerate(horizons):
+        for d in np.unique(test_dates):
+            sel = (test_dates==d) & test_m[:,j].astype(bool)
+            yt = test_y[:,j][sel]; pt = test_p[:,j][sel]
+            if yt.size==0:
+                roc=prc=brier=ece=np.nan
+            else:
+                try: roc = roc_auc_score(yt, pt)
+                except: roc = np.nan
+                prc = average_precision_score(yt, pt) if yt.sum()>0 else np.nan
+                brier = brier_score(yt, pt); ece = ece_score(yt, pt)
+            per_month.append({"date":str(d.date()), "horizon":h,
+                              "n":int(sel.sum()), "pos":int(yt.sum() if yt.size else 0),
+                              "auroc":roc, "auprc":prc, "brier":brier, "ece":ece})
+    df_month = pd.DataFrame(per_month)
+
+    # 저장
+    args.save_dir.mkdir(parents=True, exist_ok=True)
+    torch.save(model.state_dict(), args.save_dir / "best_v7.pt")
+
+    if args.save_preds:
+        recs=[]
+        for j,h in enumerate(horizons):
+            for i in range(len(test_p)):
+                recs.append({
+                    "date": str(test_dates[i].date()),
+                    "area_ord": int(a_ord[i]),
+                    "horizon": h,
+                    "y_true": int(test_y[i, j]),
+                    "y_mask": int(test_m[i, j]),
+                    "y_prob": float(test_p[i, j]),
+                    "split": "test"
+                })
+        pq.write_table(pa.Table.from_pandas(pd.DataFrame(recs)),
+                       args.save_dir / "preds_next_year.parquet")
+
+    if args.save_metrics:
+        rows=[]
+        for j,h in enumerate(horizons):
+            rows.append({"horizon":h, **table[j]})
+        pd.DataFrame(rows).to_csv(args.save_dir / "metrics_next_year.csv", index=False)
+        df_month.to_csv(args.save_dir / "metrics_next_year_by_month.csv", index=False)
+
+    if args.save_calib and args.calibration!="none":
+        import pickle
+        with open(args.save_dir / "calibrators.pkl","wb") as f:
+            pickle.dump(calibrators, f)
+
+# ─────────────────────── 8) 모드: fixed & walkforward ───────────────────── #
+def run_fixed(args):
+    device = torch.device(args.device)
+    seed_everything(args.seed)
+    args.save_dir.mkdir(parents=True, exist_ok=True)
+    feats, meta, horizons, n_country, month_dim, static_dim, Lmax, dates, df_idx, labels, ymasks = \
+        load_feats_labels(args.proc_dir, args.label_suffix)
+    if args.input_len is None: args.input_len = Lmax
+
+    splits   = torch.load(args.proc_dir / "splits.pt", map_location="cpu", weights_only=False)
+    def mask_split(name:str):
+        idx_bool = splits[name]  # (T,)
+        keep = df_idx.t_end.map(lambda t: bool(idx_bool[t]))
+        return filter_by_mask_policy(df_idx[keep], ymasks, horizons, args.mask_policy)
+
+    # --- split 데이터프레임 준비
+    df_train = mask_split("train")
+    df_val   = mask_split("val")
+    df_test  = mask_split("test")
+
+    df_train = _dedup(df_train)
+    df_val   = _dedup(df_val)
+    df_test  = _dedup(df_test)
+
+
+    # --- 샘플러 horizon 선택
+    if args.sampler_h_ref.strip().lower() == "auto":
+        sampler_h, pos_cnt = _choose_sampler_h(df_train, labels, ymasks, horizons)
+        LOG.info(f"[sampler] auto → h{sampler_h} (train positives={pos_cnt})")
+    else:
+        try:
+            sampler_h = int(args.sampler_h_ref)
+            if sampler_h not in horizons:
+                raise ValueError
+        except Exception:
+            sampler_h, pos_cnt = _choose_sampler_h(df_train, labels, ymasks, horizons)
+            LOG.warning(f"[sampler] invalid --sampler-h-ref → auto fallback: h{sampler_h}")
+
+    # --- TRAIN 국가 필터(선택)
+    df_train, kept_areas = _filter_train_countries(
+        df_train, labels, ymasks, sampler_h, args.min_train_pos_per_country
+    )
+
+    loaders = {
+        "train": build_loader(df_train, feats, labels, ymasks, horizons, "train", args, sampler_h),
+        "val":   build_loader(df_val,   feats, labels, ymasks, horizons, "val",   args),
+        "test":  build_loader(df_test,  feats, labels, ymasks, horizons, "test",  args),
+    }
+
+    _, _, C, H, W = feats["X"].shape
+    model = build_model_v7(
+        in_ch=C, img_h=H, img_w=W,
+        d_s_val=static_dim, d_s_mask=static_dim,
+        month_dim=month_dim, n_country=n_country,
+        horizons=horizons,
+        patch_size=args.patch_size, embed_ch=args.embed_ch,
+        country_emb_dim=args.country_emb,
+        dropout_static=args.static_drop,
+        device=device
+    )
+    LOG.info(f"Model params = {sum(p.numel() for p in model.parameters()):,}")
+
+    model = train_model(loaders, model, args, device)
+
+    # 캘리브레이션/임계
+    val_y, val_m, val_p, _, _ = collect_probs(loaders["val"], model, device, horizons)
+    calibrators=[]
+    for j,_ in enumerate(horizons):
+        cal = build_calibrator(args.calibration)
+        mask = val_m[:,j].astype(bool)
+        calibrators.append(cal.fit(val_p[:,j][mask], val_y[:,j][mask]))
+
+    test_y, test_m, test_p, t_end, a_ord = collect_probs(loaders["test"], model, device, horizons, calibrators)
+    table = compute_table_metrics(test_y, test_m, test_p)
+    for j,h in enumerate(horizons):
+        hit, fa100 = budget_metrics(test_y[:,j], test_m[:,j], test_p[:,j], args.budget)
+        table[j]["hit@b"] = hit; table[j]["fa@b"] = fa100
+    LOG.info("TEST per-h metrics: " + " | ".join([
+        f"h{h}: AUPRC={table[j]['prc']:.3f} AUROC={table[j]['roc']:.3f} "
+        f"Brier={table[j]['brier']:.3f} ECE={table[j]['ece']:.3f} Hit@b={table[j]['hit@b']:.3f}"
+        for j,h in enumerate(horizons)
+    ]))
+
+    # 저장
+    torch.save(model.state_dict(), args.save_dir / "best_v7.pt")
+    if args.save_preds:
+        test_dates = dates[t_end]
+        recs=[]
+        for j,h in enumerate(horizons):
+            for i in range(len(test_p)):
+                recs.append({
+                    "date": str(test_dates[i].date()),
+                    "area_ord": int(a_ord[i]),
+                    "horizon": h,
+                    "y_true": int(test_y[i, j]),
+                    "y_mask": int(test_m[i, j]),
+                    "y_prob": float(test_p[i, j]),
+                    "split": "test"
+                })
+        pq.write_table(pa.Table.from_pandas(pd.DataFrame(recs)),
+                       args.save_dir / "preds_fixed.parquet")
+    if args.save_metrics:
+        rows=[]
+        for j,h in enumerate(horizons):
+            rows.append({"horizon":h, **table[j]})
+        pd.DataFrame(rows).to_csv(args.save_dir / "metrics_fixed.csv", index=False)
+
+def run_walkforward(args):
+    device = torch.device(args.device)
+    seed_everything(args.seed)
+    args.save_dir.mkdir(parents=True, exist_ok=True)
+    feats, meta, horizons, n_country, month_dim, static_dim, Lmax, dates, df_idx, labels, ymasks = \
+        load_feats_labels(args.proc_dir, args.label_suffix)
+    if args.input_len is None: args.input_len = Lmax
+
+    splits   = torch.load(args.proc_dir / "splits.pt", map_location="cpu", weights_only=False)
+    test_mask = splits["test"].astype(bool)
+    origin_ts = np.where(test_mask)[0]
+    origin_ts = origin_ts[::max(1,args.wf_stride)]
+
+    preds_rows = []
+    month_rows = []
+    h_max = max(horizons)
+
+    for t0 in origin_ts:
+        LOG.info(f"WF origin t0={str(dates[t0].date())} …")
+
+        if args.wf_window < 0: train_start = 0
+        else:                   train_start = max(0, t0 - args.wf_window + 1)
+        train_end = t0
+        val_start = max(0, t0 - args.wf_val_window + 1)
+        val_end   = t0
+
+        def pick(df, a, b, require_past=True):
+            sel = (df.t_end >= a) & (df.t_end <= b)
+            if require_past: sel &= (df.t_end + h_max <= t0)
+            return df[sel]
+        
+        df_train = filter_by_mask_policy(pick(df_idx, train_start, train_end, True), ymasks, horizons, args.mask_policy)
+        df_val   = filter_by_mask_policy(pick(df_idx, val_start,   val_end,   True), ymasks, horizons, args.mask_policy)
+
+        df_train = _dedup(df_train)
+        df_val   = _dedup(df_val)
+
+
+        # ★ 추가 1) 샘플러 horizon 선택 (auto 또는 정수 지정)
+        if str(args.sampler_h_ref).strip().lower() == "auto":
+            sampler_h, pos_cnt = _choose_sampler_h(df_train, labels, ymasks, horizons)
+            LOG.info(f"[WF {str(dates[t0].date())}] sampler auto → h{sampler_h} (train pos={pos_cnt})")
+        else:
+            try:
+                sampler_h = int(args.sampler_h_ref)
+                if sampler_h not in horizons: raise ValueError
+            except Exception:
+                sampler_h, pos_cnt = _choose_sampler_h(df_train, labels, ymasks, horizons)
+                LOG.warning(f"[WF {str(dates[t0].date())}] invalid --sampler-h-ref → auto fallback: h{sampler_h}")
+
+        # ★ 추가 2) TRAIN 국가 필터링 (훈련에서만 제외; VAL/TEST는 그대로)
+        if args.min_train_pos_per_country and args.min_train_pos_per_country > 0:
+            df_train, kept_areas = _filter_train_countries(
+                df_train, labels, ymasks, sampler_h, args.min_train_pos_per_country
+            )
+            LOG.info(f"[WF {str(dates[t0].date())}] TRAIN country filter: keep={len(kept_areas)} (min_k={args.min_train_pos_per_country})")
+
+        # ★ 추가 3) train 로더에 sampler_h 전달
+        loaders = {
+            "train": build_loader(df_train, feats, labels, ymasks, horizons, "train", args, sampler_h),
+            "val":   build_loader(df_val,   feats, labels, ymasks, horizons, "val",   args),
+        }
+
+        _, _, C, H, W = feats["X"].shape
+        model = build_model_v7(
+            in_ch=C, img_h=H, img_w=W,
+            d_s_val=static_dim, d_s_mask=static_dim,
+            month_dim=month_dim, n_country=n_country,
+            horizons=horizons,
+            patch_size=args.patch_size, embed_ch=args.embed_ch,
+            country_emb_dim=args.country_emb,
+            dropout_static=args.static_drop,
+            device=device
+        )
+        model = train_model(loaders, model, args, device)
+
+        # 오리진 직전 val로 캘리브레이션
+        val_y, val_m, val_p, _, _ = collect_probs(loaders["val"], model, device, horizons)
+        calibrators=[]
+        for j,_ in enumerate(horizons):
+            cal = build_calibrator(args.calibration)
+            mask = val_m[:,j].astype(bool)
+            calibrators.append(cal.fit(val_p[:,j][mask], val_y[:,j][mask]))
+
+        # 오리진 월 OOS
+        df_t0 = df_idx[df_idx.t_end == t0]
+        loader_t0 = build_loader(filter_by_mask_policy(df_t0, ymasks, horizons, args.mask_policy),
+                                 feats, labels, ymasks, horizons, "val", args)
+        y_t0, m_t0, p_t0, t_end_t0, a_ord_t0 = collect_probs(loader_t0, model, device, horizons, calibrators)
+
+        for j,h in enumerate(horizons):
+            for i in range(len(p_t0)):
+                preds_rows.append({
+                    "origin": str(dates[t0].date()),
+                    "date":   str(dates[t_end_t0[i]].date()),
+                    "area_ord": int(a_ord_t0[i]),
+                    "horizon": h,
+                    "y_true": int(y_t0[i, j]),
+                    "y_mask": int(m_t0[i, j]),
+                    "y_prob": float(p_t0[i, j]),
+                    "split":  "wf"
+                })
+        # 월별 지표
+        for j,h in enumerate(horizons):
+            sel = m_t0[:,j].astype(bool)
+            yt = y_t0[:,j][sel]; pt = p_t0[:,j][sel]
+            if yt.size==0:
+                roc=prc=brier=ece=np.nan; hit=fa100=np.nan
+            else:
+                try: roc = roc_auc_score(yt, pt)
+                except: roc = np.nan
+                prc = average_precision_score(yt, pt) if yt.sum()>0 else np.nan
+                brier = brier_score(yt, pt); ece = ece_score(yt, pt)
+                hit, fa100 = budget_metrics(yt, np.ones_like(yt,dtype=bool), pt, args.budget)
+            month_rows.append({"origin":str(dates[t0].date()), "horizon":h,
+                               "auroc":roc, "auprc":prc, "brier":brier, "ece":ece,
+                               "hit@b":hit, "fa@b":fa100, "n":int(sel.sum()),
+                               "pos":int(yt.sum() if yt.size else 0)})
+
+    if args.save_preds and len(preds_rows)>0:
+        pq.write_table(pa.Table.from_pandas(pd.DataFrame(preds_rows)),
+                       args.save_dir / "preds_wf.parquet")
+    if args.save_metrics and len(month_rows)>0:
+        pd.DataFrame(month_rows).to_csv(args.save_dir / "metrics_wf_by_origin.csv", index=False)
+
+# ─────────────────────── 9) Main ────────────────────────────────────────── #
+def main():
+    args = parse_args()
+    if args.h_weights is not None:
+        LOG.info(f"h-weights={args.h_weights}")
+
+    if args.exp_mode == "next_year":
+        run_next_year(args)
+    elif args.exp_mode == "fixed":
+        run_fixed(args)
+    else:
+        run_walkforward(args)
+
+if __name__ == "__main__":
+    main()
+python train_v7.py \
+  --exp-mode next_year \
+  --proc-dir   data/processed_v7_ifpa_onset_fixed_thr2p0_AFR \
+  --train-start-year 2017 --train-end-year 2022 \
+  --calib-window-months 18 \
+  --input-len 12 --mask-policy any \
+  --patch-size 32 --embed-ch 8 --country-emb 8 --static-drop 0.5 \
+  --loss focal --focal-alpha 0.85 --focal-gamma 2.0 \
+  --h-weights 0.05 0.95 \
+  --val-metric h3_roc \
+  --th-policy budget --budget 0.10 --calibration none \
+  --label-suffix 'thr1.8' \
+  --sampler-h-ref 3 \
+  --min-train-pos-per-country 2 \
+  --lr 2e-4 --weight-decay 2e-2 \
+  --device cuda:0 --epochs 6 --patience 5 --batch-size 8 --num-workers 8 \
+  --save-dir ckpt_v7_AFR_thr18_focusH3_small_focal_h3roc_e6_s41_repro \
+  --save-preds --save-metrics --seed 41 \
+  --calibration platt --save-calib \
+  --save-dir ckpt_v7_AFR_thr18_focusH3_small_focal_h3roc_e6_s41_platt
+
+
+
+#############3
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python build_dataset_v7.py \
+  --npz          data/blacksea_tensor_log1p.npz \
+  --meta-json    data/blacksea_tensor_log1p.meta.json \
+  --sparse-pt    data/blacksea_sparse.pt \
+  --price-csv    data/raw/CPIs.csv \
+  --crops-csv    data/raw/Crops_and_livestock_products.csv \
+  --gdp-csv      data/raw/Value_of_Agricultural_Production.csv \
+  --wdi-xlsx     data/raw/WDI_wo_CPI_related.xlsx \
+  --raw-dir      data/raw \
+  --out-dir      data/processed_v7_ifpa_onset_fixed_thr2p0 \
+  --window-len   12 \
+  --horizon      1 3 \
+  --scaler       robust \
+  --month-enc    cyclical \
+  --surge-mode   ifpa \
+  --ifpa-gamma   0.6 \
+  --ifpa-thr     2.0 \
+  --multi-thr    1.8,2.0,2.5 \
+  --label-timing onset \
+  --min-duration 2 \
+  --refractory   2 \
+  --baseline-mode  fixed \
+  --baseline-years 2000:2018 \
+  --vintage-interp ffill \
+  --cv-stride    0 \
+  --val-year     2022 \
+  --use-sparse \
+  --verbose
+13:42:19 [INFO] Sparse COO ➜ dense loaded (shape (84, 5, 1133, 904))
+13:42:22 [INFO] X_win torch.Size([72, 12, 5, 1133, 904])  windows=72
+13:42:29 [INFO] Countries=135
+13:42:36 [INFO] ✅ Finished → data/processed_v7_ifpa_onset_fixed_thr2p0/20250810 (25.4s)                                                                                                
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python extract_subset_v7.py \
+  --in-dir  data/processed_v7_ifpa_onset_fixed_thr2p0/20250810 \
+  --out-dir data/processed_v7_ifpa_onset_fixed_thr2p0_AFR
+13:42:49 [INFO] Loaded: A=135  T=84  horizons=[1, 3]
+13:42:49 [INFO] Filter size: 52 ISO3
+13:42:49 [INFO] ✓ Subset countries present in dataset: 36
+13:42:54 [INFO] ✓ Recomputed label_stats_yearly for subset.
+13:42:54 [INFO] Saved → /home/skmoon/codes/250727_WIP_AIS_new/data/processed_v7_ifpa_onset_fixed_thr2p0_AFR
+13:42:54 [INFO] Top-10 kept countries:
+13:42:54 [INFO]  · [DZA] Algeria  (old:1 → new:0)
+13:42:54 [INFO]  · [AGO] Angola  (old:2 → new:1)
+13:42:54 [INFO]  · [BWA] Botswana  (old:14 → new:2)
+13:42:54 [INFO]  · [BDI] Burundi  (old:19 → new:3)
+13:42:54 [INFO]  · [CMR] Cameroon  (old:22 → new:4)
+13:42:54 [INFO]  · [CPV] Cabo Verde  (old:24 → new:5)
+13:42:54 [INFO]  · [CAF] Central African Republic  (old:25 → new:6)
+13:42:54 [INFO]  · [TCD] Chad  (old:27 → new:7)
+13:42:54 [INFO]  · [COG] Congo  (old:30 → new:8)
+13:42:54 [INFO]  · [BEN] Benin  (old:35 → new:9)
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python train_v7.py   --exp-mode next_year   --proc-dir   data/processed_v7_ifpa_onset_fixed_thr2p0_AFR   --train-start-year 2017 --train-end-year 2022   --calib-window-months 18   --input-len 12 --mask-policy any   --patch-size 32 --embed-ch 8 --country-emb 8 --static-drop 0.5   --loss focal --focal-alpha 0.85 --focal-gamma 2.0   --h-weights 0.05 0.95   --val-metric h3_roc   --th-policy budget --budget 0.10 --calibration none   --label-suffix 'thr1.8'   --sampler-h-ref 3   --min-train-pos-per-country 2   --lr 2e-4 --weight-decay 2e-2   --device cuda:0 --epochs 6 --patience 5 --batch-size 8 --num-workers 8   --save-dir ckpt_v7_AFR_thr18_focusH3_small_focal_h3roc_e6_s41_repro   --save-preds --save-metrics --seed 41   --calibration platt --save-calib   --save-dir ckpt_v7_AFR_thr18_focusH3_small_focal_h3roc_e6_s41_platt
+13:43:18 [INFO] h-weights=[0.05, 0.95]
+13:43:22 [INFO] TRAIN country filter: keep=35 drop=1 (min_k=2)
+13:43:22 [INFO] [NEXT] TRAIN country filter: keep=35 (min_k=2)
+13:43:22 [INFO] Model params = 24,571,830
+13:44:38 [INFO] [E001] val(h3_roc)=0.780 | per-h AUPRC: h1:0.129 h3:0.294       
+13:45:50 [INFO] [E002] val(h3_roc)=0.832 | per-h AUPRC: h1:0.129 h3:0.275       
+13:47:02 [INFO] [E003] val(h3_roc)=0.842 | per-h AUPRC: h1:0.136 h3:0.339       
+13:48:14 [INFO] [E004] val(h3_roc)=0.856 | per-h AUPRC: h1:0.143 h3:0.391       
+13:49:27 [INFO] [E005] val(h3_roc)=0.864 | per-h AUPRC: h1:0.136 h3:0.386       
+13:50:39 [INFO] [E006] val(h3_roc)=0.867 | per-h AUPRC: h1:0.142 h3:0.389       
+13:51:04 [INFO] TEST per-h metrics: h1: AUPRC=0.030 AUROC=0.548 Brier=0.023 ECE=0.011 Hit@b=0.111 | h3: AUPRC=0.213 AUROC=0.718 Brier=0.065 ECE=0.011 Hit@b=0.261
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+
+이 내용 정리해서, 이 코드와 실험을 다른 사람이 처음부터 한다고 했을때, 하이퍼 파리미터와 실험 세팅을 자세히 설명해줘. 시간 충분히 갖고 길고 자세히 구체적으로, 친절하고 초보가 이해하기 쉽게.
+
+
+
+####
+
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ ./test_v7.sh 
+[STEP 1] Build dataset (if needed) & extract AFR subset ...
+ -> dataset already exists at data/processed_v7_ifpa_onset_fixed_thr2p0_AFR, skipping build.
+ -> latest date under data/processed_v7_ifpa_onset_fixed_thr2p0: 20250810
+[STEP 2] Check label keys available in data/processed_v7_ifpa_onset_fixed_thr2p0_AFR/labels_all.npz ...
+
+Available label keys:
+   Y_1
+   Y_1_thr1.8
+   Y_1_thr2
+   Y_1_thr2.5
+   Y_3
+   Y_3_thr1.8
+   Y_3_thr2
+   Y_3_thr2.5
+   Ymask_1
+   Ymask_1_thr1.8
+   Ymask_1_thr2
+   Ymask_1_thr2.5
+   Ymask_3
+   Ymask_3_thr1.8
+   Ymask_3_thr2
+   Ymask_3_thr2.5
+suffix 'thr1.8': OK
+suffix 'thr2.0': NOT FOUND
+suffix 'thr2': OK
+suffix 'thr2.5': OK
+
+14:45:08 [INFO] h-weights=[0.0, 1.0]
+14:45:11 [INFO] TRAIN country filter: keep=35 drop=1 (min_k=2)
+14:45:11 [INFO] [NEXT] TRAIN country filter: keep=35 (min_k=2)
+14:45:11 [INFO] Model params = 24,571,830
+14:46:27 [INFO] [E001] val(h3_roc)=0.787 | per-h AUPRC: h1:0.096 h3:0.300       
+14:47:38 [INFO] [E002] val(h3_roc)=0.828 | per-h AUPRC: h1:0.105 h3:0.263       
+14:48:50 [INFO] [E003] val(h3_roc)=0.838 | per-h AUPRC: h1:0.082 h3:0.335       
+14:50:02 [INFO] [E004] val(h3_roc)=0.855 | per-h AUPRC: h1:0.080 h3:0.404       
+14:51:14 [INFO] [E005] val(h3_roc)=0.866 | per-h AUPRC: h1:0.095 h3:0.396       
+14:52:26 [INFO] [E006] val(h3_roc)=0.870 | per-h AUPRC: h1:0.115 h3:0.393       
+14:52:51 [INFO] TEST per-h metrics: h1: AUPRC=0.024 AUROC=0.500 Brier=0.024 ECE=0.009 Hit@b=0.000 | h3: AUPRC=0.108 AUROC=0.603 Brier=0.072 ECE=0.073 Hit@b=0.304
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+14:52:53 [INFO] h-weights=[0.0, 1.0]
+14:52:57 [INFO] [NEXT] sampler auto → h3 (train pos=274)
+14:52:57 [INFO] TRAIN country filter: keep=35 drop=1 (min_k=3)
+14:52:57 [INFO] [NEXT] TRAIN country filter: keep=35 (min_k=3)
+14:52:57 [INFO] Model params = 24,571,982
+14:54:13 [INFO] [E001] val(h3_roc)=0.778 | per-h AUPRC: h1:0.034 h3:0.270       
+14:55:24 [INFO] [E002] val(h3_roc)=0.854 | per-h AUPRC: h1:0.036 h3:0.320       
+14:56:36 [INFO] [E003] val(h3_roc)=0.848 | per-h AUPRC: h1:0.038 h3:0.344       
+14:57:48 [INFO] [E004] val(h3_roc)=0.857 | per-h AUPRC: h1:0.049 h3:0.395       
+14:59:00 [INFO] [E005] val(h3_roc)=0.867 | per-h AUPRC: h1:0.035 h3:0.383       
+15:00:12 [INFO] [E006] val(h3_roc)=0.867 | per-h AUPRC: h1:0.035 h3:0.386       
+15:00:36 [INFO] TEST per-h metrics: h1: AUPRC=0.031 AUROC=0.502 Brier=0.023 ECE=0.015 Hit@b=0.222 | h3: AUPRC=0.179 AUROC=0.691 Brier=0.066 ECE=0.017 Hit@b=0.261
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+15:00:39 [INFO] h-weights=[0.0, 1.0]
+15:00:43 [INFO] TRAIN country filter: keep=35 drop=0 (min_k=2)
+15:00:43 [INFO] [NEXT] TRAIN country filter: keep=35 (min_k=2)
+15:00:43 [INFO] Model params = 24,571,830
+15:01:58 [INFO] [E001] val(h3_roc)=0.787 | per-h AUPRC: h1:0.096 h3:0.300       
+15:03:09 [INFO] [E002] val(h3_roc)=0.828 | per-h AUPRC: h1:0.105 h3:0.263       
+15:04:20 [INFO] [E003] val(h3_roc)=0.838 | per-h AUPRC: h1:0.082 h3:0.335       
+15:05:32 [INFO] [E004] val(h3_roc)=0.855 | per-h AUPRC: h1:0.080 h3:0.404       
+15:06:44 [INFO] [E005] val(h3_roc)=0.866 | per-h AUPRC: h1:0.095 h3:0.396       
+15:07:56 [INFO] [E006] val(h3_roc)=0.870 | per-h AUPRC: h1:0.115 h3:0.393       
+15:08:18 [INFO] TEST per-h metrics: h1: AUPRC=0.031 AUROC=0.492 Brier=0.028 ECE=0.009 Hit@b=0.000 | h3: AUPRC=0.199 AUROC=0.724 Brier=0.065 ECE=0.012 Hit@b=0.304
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+
+Done. 결과 폴더:
+  - ckpt_v7_AFR_expA_thr2_iso_any_20250810_144507
+  - ckpt_v7_AFR_expB_thr25_platt_any_20250810_144507
+  - ckpt_v7_AFR_expC_thr18_platt_all_20250810_144507
+빠른 비교:  grep -H "TEST per-h metrics" */train.log
+
+
+###
+
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ ./run_series_v7_v2.sh 
+[OK] label keys for thr1.8 found
+[PREFLIGHT] {"1": {"pos_train": 180, "pos_val": 48}, "3": {"pos_train": 548, "pos_val": 134}}
+
+======================
+ RUN  2017~2022  →  EVAL 2023
+ SAVE series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2022_eval_2023
+ mask-policy=all, min_k=2, calib=platt, sampler=3, calib_months=18
+======================
+16:26:51 [INFO] h-weights=[0.0, 1.0]
+16:26:55 [INFO] TRAIN country filter: keep=35 drop=0 (min_k=2)
+16:26:55 [INFO] [NEXT] TRAIN country filter: keep=35 (min_k=2)
+16:26:55 [INFO] Model params = 24,571,830
+16:28:12 [INFO] [E001] val(h3_roc)=0.791 | per-h AUPRC: h1:0.097 h3:0.300       
+16:29:26 [INFO] [E002] val(h3_roc)=0.826 | per-h AUPRC: h1:0.080 h3:0.255       
+16:30:40 [INFO] [E003] val(h3_roc)=0.843 | per-h AUPRC: h1:0.080 h3:0.346       
+16:31:54 [INFO] [E004] val(h3_roc)=0.859 | per-h AUPRC: h1:0.080 h3:0.408       
+16:33:07 [INFO] [E005] val(h3_roc)=0.864 | per-h AUPRC: h1:0.082 h3:0.388       
+16:34:20 [INFO] [E006] val(h3_roc)=0.867 | per-h AUPRC: h1:0.082 h3:0.390       
+16:34:42 [INFO] TEST per-h metrics: h1: AUPRC=0.033 AUROC=0.517 Brier=0.028 ECE=0.009 Hit@b=0.000 | h3: AUPRC=0.210 AUROC=0.714 Brier=0.065 ECE=0.013 Hit@b=0.261
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+16:34:42 [INFO] TEST per-h metrics: h1: AUPRC=0.033 AUROC=0.517 Brier=0.028 ECE=0.009 Hit@b=0.000 | h3: AUPRC=0.210 AUROC=0.714 Brier=0.065 ECE=0.013 Hit@b=0.261
+series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2022_eval_2023/train.log:21:16:34:42 [INFO] TEST per-h metrics: h1: AUPRC=0.033 AUROC=0.517 Brier=0.028 ECE=0.009 Hit@b=0.000 | h3: AUPRC=0.210 AUROC=0.714 Brier=0.065 ECE=0.013 Hit@b=0.261
+[PREFLIGHT] {"1": {"pos_train": 158, "pos_val": 56}, "3": {"pos_train": 478, "pos_val": 168}}
+
+======================
+ RUN  2017~2021  →  EVAL 2022
+ SAVE series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2021_eval_2022
+ mask-policy=all, min_k=2, calib=platt, sampler=3, calib_months=18
+======================
+16:34:45 [INFO] h-weights=[0.0, 1.0]
+16:34:49 [INFO] TRAIN country filter: keep=35 drop=0 (min_k=2)
+16:34:49 [INFO] [NEXT] TRAIN country filter: keep=35 (min_k=2)
+16:34:49 [INFO] Model params = 24,571,830
+16:35:53 [INFO] [E001] val(h3_roc)=0.788 | per-h AUPRC: h1:0.069 h3:0.301       
+16:36:54 [INFO] [E002] val(h3_roc)=0.774 | per-h AUPRC: h1:0.071 h3:0.277       
+16:37:54 [INFO] [E003] val(h3_roc)=0.839 | per-h AUPRC: h1:0.067 h3:0.364       
+16:38:55 [INFO] [E004] val(h3_roc)=0.830 | per-h AUPRC: h1:0.065 h3:0.364       
+16:39:56 [INFO] [E005] val(h3_roc)=0.848 | per-h AUPRC: h1:0.066 h3:0.387       
+16:40:56 [INFO] [E006] val(h3_roc)=0.848 | per-h AUPRC: h1:0.065 h3:0.391       
+16:41:21 [INFO] TEST per-h metrics: h1: AUPRC=0.048 AUROC=0.655 Brier=0.024 ECE=0.021 Hit@b=0.200 | h3: AUPRC=0.156 AUROC=0.601 Brier=0.063 ECE=0.077 Hit@b=0.385
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+16:41:21 [INFO] TEST per-h metrics: h1: AUPRC=0.048 AUROC=0.655 Brier=0.024 ECE=0.021 Hit@b=0.200 | h3: AUPRC=0.156 AUROC=0.601 Brier=0.063 ECE=0.077 Hit@b=0.385
+series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2021_eval_2022/train.log:28:16:41:21 [INFO] TEST per-h metrics: h1: AUPRC=0.048 AUROC=0.655 Brier=0.024 ECE=0.021 Hit@b=0.200 | h3: AUPRC=0.156 AUROC=0.601 Brier=0.063 ECE=0.077 Hit@b=0.385
+[PREFLIGHT] {"1": {"pos_train": 114, "pos_val": 78}, "3": {"pos_train": 344, "pos_val": 210}}
+
+======================
+ RUN  2017~2020  →  EVAL 2021
+ SAVE series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2020_eval_2021
+ mask-policy=all, min_k=2, calib=platt, sampler=3, calib_months=18
+======================
+16:41:24 [INFO] h-weights=[0.0, 1.0]
+16:41:27 [INFO] TRAIN country filter: keep=32 drop=3 (min_k=2)
+16:41:27 [INFO] [NEXT] TRAIN country filter: keep=32 (min_k=2)
+16:41:28 [INFO] Model params = 24,571,830
+16:42:17 [INFO] [E001] val(h3_roc)=0.734 | per-h AUPRC: h1:0.055 h3:0.308       
+16:43:03 [INFO] [E002] val(h3_roc)=0.812 | per-h AUPRC: h1:0.055 h3:0.391       
+16:43:48 [INFO] [E003] val(h3_roc)=0.805 | per-h AUPRC: h1:0.056 h3:0.397       
+16:44:34 [INFO] [E004] val(h3_roc)=0.834 | per-h AUPRC: h1:0.058 h3:0.412       
+16:45:20 [INFO] [E005] val(h3_roc)=0.837 | per-h AUPRC: h1:0.058 h3:0.429       
+16:46:06 [INFO] [E006] val(h3_roc)=0.842 | per-h AUPRC: h1:0.058 h3:0.440       
+16:46:30 [INFO] TEST per-h metrics: h1: AUPRC=0.053 AUROC=0.490 Brier=0.050 ECE=0.010 Hit@b=0.136 | h3: AUPRC=0.173 AUROC=0.553 Brier=0.134 ECE=0.045 Hit@b=0.076
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+16:46:30 [INFO] TEST per-h metrics: h1: AUPRC=0.053 AUROC=0.490 Brier=0.050 ECE=0.010 Hit@b=0.136 | h3: AUPRC=0.173 AUROC=0.553 Brier=0.134 ECE=0.045 Hit@b=0.076
+series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2020_eval_2021/train.log:21:16:46:30 [INFO] TEST per-h metrics: h1: AUPRC=0.053 AUROC=0.490 Brier=0.050 ECE=0.010 Hit@b=0.136 | h3: AUPRC=0.173 AUROC=0.553 Brier=0.134 ECE=0.045 Hit@b=0.076
+[PREFLIGHT] {"1": {"pos_train": 70, "pos_val": 70}, "3": {"pos_train": 216, "pos_val": 216}}
+
+======================
+ RUN  2017~2019  →  EVAL 2020
+ SAVE series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2019_eval_2020
+ mask-policy=any, min_k=1, calib=platt, sampler=auto, calib_months=12
+======================
+16:46:33 [INFO] h-weights=[0.0, 1.0]
+16:46:36 [INFO] [NEXT] sampler auto → h3 (train pos=108)
+16:46:36 [INFO] TRAIN country filter: keep=28 drop=8 (min_k=1)
+16:46:36 [INFO] [NEXT] TRAIN country filter: keep=28 (min_k=1)
+16:46:37 [INFO] Model params = 24,571,830
+16:47:09 [INFO] [E001] val(h3_roc)=0.653 | per-h AUPRC: h1:0.078 h3:0.410       
+16:47:37 [INFO] [E002] val(h3_roc)=0.674 | per-h AUPRC: h1:0.080 h3:0.418       
+16:48:06 [INFO] [E003] val(h3_roc)=0.693 | per-h AUPRC: h1:0.077 h3:0.426       
+16:48:35 [INFO] [E004] val(h3_roc)=0.705 | per-h AUPRC: h1:0.076 h3:0.401       
+16:49:04 [INFO] [E005] val(h3_roc)=0.731 | per-h AUPRC: h1:0.073 h3:0.433       
+16:49:32 [INFO] [E006] val(h3_roc)=0.737 | per-h AUPRC: h1:0.074 h3:0.441       
+16:49:53 [INFO] TEST per-h metrics: h1: AUPRC=0.040 AUROC=0.462 Brier=0.043 ECE=0.040 Hit@b=0.056 | h3: AUPRC=0.175 AUROC=0.624 Brier=0.120 ECE=0.118 Hit@b=0.115
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+16:49:53 [INFO] TEST per-h metrics: h1: AUPRC=0.040 AUROC=0.462 Brier=0.043 ECE=0.040 Hit@b=0.056 | h3: AUPRC=0.175 AUROC=0.624 Brier=0.120 ECE=0.118 Hit@b=0.115
+series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2019_eval_2020/train.log:23:16:49:53 [INFO] TEST per-h metrics: h1: AUPRC=0.040 AUROC=0.462 Brier=0.043 ECE=0.040 Hit@b=0.056 | h3: AUPRC=0.175 AUROC=0.624 Brier=0.120 ECE=0.118 Hit@b=0.115
+[PREFLIGHT] {"1": {"pos_train": 0, "pos_val": 0}, "3": {"pos_train": 0, "pos_val": 0}}
+
+======================
+ RUN  2017~2018  →  EVAL 2019
+ SAVE series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2018_eval_2019
+ mask-policy=any, min_k=0, calib=none, sampler=auto, calib_months=12
+======================
+16:49:56 [INFO] h-weights=[0.0, 1.0]
+16:49:59 [INFO] [NEXT] sampler auto → h1 (train pos=0)
+16:50:00 [INFO] Model params = 24,571,830
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+16:50:22 [INFO] [E001] val(h3_roc)=nan | per-h AUPRC: h1:nan h3:nan
+/home/skmoon/codes/250727_WIP_AIS_new/train_v7.py:751: RuntimeWarning: Mean of empty slice
+  "val_mean_prc": float(np.nanmean([m["prc"] for m in mets.values()])),
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+16:50:41 [INFO] [E002] val(h3_roc)=nan | per-h AUPRC: h1:nan h3:nan
+/home/skmoon/codes/250727_WIP_AIS_new/train_v7.py:751: RuntimeWarning: Mean of empty slice
+  "val_mean_prc": float(np.nanmean([m["prc"] for m in mets.values()])),
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+16:51:00 [INFO] [E003] val(h3_roc)=nan | per-h AUPRC: h1:nan h3:nan
+/home/skmoon/codes/250727_WIP_AIS_new/train_v7.py:751: RuntimeWarning: Mean of empty slice
+  "val_mean_prc": float(np.nanmean([m["prc"] for m in mets.values()])),
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+16:51:19 [INFO] [E004] val(h3_roc)=nan | per-h AUPRC: h1:nan h3:nan
+/home/skmoon/codes/250727_WIP_AIS_new/train_v7.py:751: RuntimeWarning: Mean of empty slice
+  "val_mean_prc": float(np.nanmean([m["prc"] for m in mets.values()])),
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+16:51:38 [INFO] [E005] val(h3_roc)=nan | per-h AUPRC: h1:nan h3:nan
+/home/skmoon/codes/250727_WIP_AIS_new/train_v7.py:751: RuntimeWarning: Mean of empty slice
+  "val_mean_prc": float(np.nanmean([m["prc"] for m in mets.values()])),
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+/home/skmoon/venvs/dl5090/lib/python3.12/site-packages/sklearn/metrics/_ranking.py:424: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+  warnings.warn(
+16:51:57 [INFO] [E006] val(h3_roc)=nan | per-h AUPRC: h1:nan h3:nan
+/home/skmoon/codes/250727_WIP_AIS_new/train_v7.py:751: RuntimeWarning: Mean of empty slice
+  "val_mean_prc": float(np.nanmean([m["prc"] for m in mets.values()])),
+16:51:57 [INFO] Early-stopping
+16:52:15 [INFO] TEST per-h metrics: h1: AUPRC=0.071 AUROC=0.494 Brier=0.311 ECE=0.493 Hit@b=0.100 | h3: AUPRC=0.220 AUROC=0.479 Brier=0.213 ECE=0.194 Hit@b=0.085
+16:52:15 [INFO] TEST per-h metrics: h1: AUPRC=0.071 AUROC=0.494 Brier=0.311 ECE=0.493 Hit@b=0.100 | h3: AUPRC=0.220 AUROC=0.479 Brier=0.213 ECE=0.194 Hit@b=0.085
+series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2018_eval_2019/train.log:57:16:52:15 [INFO] TEST per-h metrics: h1: AUPRC=0.071 AUROC=0.494 Brier=0.311 ECE=0.493 Hit@b=0.100 | h3: AUPRC=0.220 AUROC=0.479 Brier=0.213 ECE=0.194 Hit@b=0.085
+
+All done. Results under: series_v7_AFR_thr18_h3only_safe_v2_e6_s41
+16:52:15 [INFO] TEST per-h metrics: h1: AUPRC=0.071 AUROC=0.494 Brier=0.311 ECE=0.493 Hit@b=0.100 | h3: AUPRC=0.220 AUROC=0.479 Brier=0.213 ECE=0.194 Hit@b=0.085
+series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2018_eval_2019/train.log:57:16:52:15 [INFO] TEST per-h metrics: h1: AUPRC=0.071 AUROC=0.494 Brier=0.311 ECE=0.493 Hit@b=0.100 | h3: AUPRC=0.220 AUROC=0.479 Brier=0.213 ECE=0.194 Hit@b=0.085
+16:49:53 [INFO] TEST per-h metrics: h1: AUPRC=0.040 AUROC=0.462 Brier=0.043 ECE=0.040 Hit@b=0.056 | h3: AUPRC=0.175 AUROC=0.624 Brier=0.120 ECE=0.118 Hit@b=0.115
+series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2019_eval_2020/train.log:23:16:49:53 [INFO] TEST per-h metrics: h1: AUPRC=0.040 AUROC=0.462 Brier=0.043 ECE=0.040 Hit@b=0.056 | h3: AUPRC=0.175 AUROC=0.624 Brier=0.120 ECE=0.118 Hit@b=0.115
+16:46:30 [INFO] TEST per-h metrics: h1: AUPRC=0.053 AUROC=0.490 Brier=0.050 ECE=0.010 Hit@b=0.136 | h3: AUPRC=0.173 AUROC=0.553 Brier=0.134 ECE=0.045 Hit@b=0.076
+series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2020_eval_2021/train.log:21:16:46:30 [INFO] TEST per-h metrics: h1: AUPRC=0.053 AUROC=0.490 Brier=0.050 ECE=0.010 Hit@b=0.136 | h3: AUPRC=0.173 AUROC=0.553 Brier=0.134 ECE=0.045 Hit@b=0.076
+16:41:21 [INFO] TEST per-h metrics: h1: AUPRC=0.048 AUROC=0.655 Brier=0.024 ECE=0.021 Hit@b=0.200 | h3: AUPRC=0.156 AUROC=0.601 Brier=0.063 ECE=0.077 Hit@b=0.385
+series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2021_eval_2022/train.log:28:16:41:21 [INFO] TEST per-h metrics: h1: AUPRC=0.048 AUROC=0.655 Brier=0.024 ECE=0.021 Hit@b=0.200 | h3: AUPRC=0.156 AUROC=0.601 Brier=0.063 ECE=0.077 Hit@b=0.385
+16:34:42 [INFO] TEST per-h metrics: h1: AUPRC=0.033 AUROC=0.517 Brier=0.028 ECE=0.009 Hit@b=0.000 | h3: AUPRC=0.210 AUROC=0.714 Brier=0.065 ECE=0.013 Hit@b=0.261
+series_v7_AFR_thr18_h3only_safe_v2_e6_s41/exp_2017_2022_eval_2023/train.log:21:16:34:42 [INFO] TEST per-h metrics: h1: AUPRC=0.033 AUROC=0.517 Brier=0.028 ECE=0.009 Hit@b=0.000 | h3: AUPRC=0.210 AUROC=0.714 Brier=0.065 ECE=0.013 Hit@b=0.261
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ [200~python report_series_v7.py \
+>   --series-dir series_v7_AFR_thr18_h3only_safe_v2_e6_s41 \
+>   --dataset-dir data/processed_v7_ifpa_onset_fixed_thr2p0_AFR \
+>   --label-suffix thr1.8 \
+>   --out series_v7_AFR_thr18_h3only_safe_v2_e6_s41/_report.txt
+[200~python: 명령을 찾을 수 없습니다
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python report_series_v7.py \
+  --series-dir series_v7_AFR_thr18_h3only_safe_v2_e6_s41 \
+  --dataset-dir data/processed_v7_ifpa_onset_fixed_thr2p0_AFR \
+  --label-suffix thr1.8 \
+  --out series_v7_AFR_thr18_h3only_safe_v2_e6_s41/_report.txt
+/home/skmoon/codes/250727_WIP_AIS_new/report_series_v7.py:167: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = datetime.utcnow().isoformat() + "Z"
+========================================================================================
+REPORT @ 2025-08-10T08:53:52.239003Z
+SERIES DIR : series_v7_AFR_thr18_h3only_safe_v2_e6_s41
+DATASET DIR: data/processed_v7_ifpa_onset_fixed_thr2p0_AFR
+LABEL SUFFIX (target): thr1.8
+========================================================================================
+DATASET META
+- n_countries: 36
+- horizons: [1, 3]
+- window_len: 12
+- time_span: ["2017-01-01", "2023-12-01"]
+- T (months): 84
+
+LABEL KEYS (labels_all.npz) – available:
+  • Y_1
+  • Y_1_thr1.8
+  • Y_1_thr2
+  • Y_1_thr2.5
+  • Y_3
+  • Y_3_thr1.8
+  • Y_3_thr2
+  • Y_3_thr2.5
+  • Ymask_1
+  • Ymask_1_thr1.8
+  • Ymask_1_thr2
+  • Ymask_1_thr2.5
+  • Ymask_3
+  • Ymask_3_thr1.8
+  • Ymask_3_thr2
+  • Ymask_3_thr2.5
+TARGET SUFFIX check: Y=True, Ymask=True (target=thr1.8)
+
+========================================================================================
+[EXPERIMENT] exp_2017_2018_eval_2019
+- train_years: [2017, 2018]
+- eval_year: 2019
+  · MANIFEST:
+  - core: {"val_metric": "h3_roc", "best_epoch": 1, "best_val": NaN, "sampler_h_ref": 1}
+  - thresholding: {"policy": "budget", "budget": 0.1, "cost_fn": 5.0, "cost_fp": 1.0, "calibration": "none"}
+  - train_hparams: {"epochs": 6, "batch_size": 8, "lr": 0.0002, "weight_decay": 0.02, "loss": "focal", "focal": {"alpha": 0.85, "gamma": 2.0}, "h_weights": [0.0, 1.0], "mask_policy": "any", "input_len": 12}
+  - model_cfg: {"param_count": 24571830, "patch_size": 32, "embed_ch": 8, "country_emb": 8, "static_drop": 0.5}
+  - args_select: {"exp_mode": "next_year", "calib_window_months": 12, "label_suffix": "thr1.8", "min_train_pos_per_country": 0, "h_weights": [0.0, 1.0], "val_metric": "h3_roc", "th_policy": "budget", "budget": 0.1, "calibration": "none", "sampler_h_ref": "auto", "seed": 41}
+  · TEST METRICS (from CSV):
+    - h1: AUROC=0.494 AUPRC=0.071 Brier=0.311 ECE=0.493 Hit@b=0.100 FA@b=9.762
+    - h3: AUROC=0.479 AUPRC=0.220 Brier=0.213 ECE=0.194 Hit@b=0.085 FA@b=8.333
+  · MONTHLY (h1): AUROC median=0.461, min=0.088, max=0.779 (n_months=12)
+               AUPRC median=0.113, min=0.031, max=0.559
+  · MONTHLY (h3): AUROC median=0.490, min=0.126, max=0.632 (n_months=12)
+               AUPRC median=0.220, min=0.110, max=0.515
+  · PRED SUMMARY (recomputed, budget=0.1):
+    - h1: n=420 pos=30 pos_rate=0.071 | AUROC=0.494 AUPRC=0.071 Brier=0.311 ECE=0.493 | Hit@b=0.100 FA@b=9.76 thr@b=0.624
+    - h3: n=420 pos=94 pos_rate=0.224 | AUROC=0.479 AUPRC=0.220 Brier=0.213 ECE=0.194 | Hit@b=0.085 FA@b=8.10 thr@b=0.065
+    - h1 top-positives months:
+       · 2019-04-01 : 6
+       · 2019-12-01 : 5
+       · 2019-02-01 : 4
+       · 2019-06-01 : 3
+       · 2019-09-01 : 3
+    - h3 top-positives months:
+       · 2019-02-01 : 11
+       · 2019-12-01 : 11
+       · 2019-04-01 : 10
+       · 2019-11-01 : 10
+       · 2019-03-01 : 8
+  · FILES present: best_v7.pt, manifest.json, metrics_next_year.csv, metrics_next_year_by_month.csv, preds_next_year.parquet
+========================================================================================
+[EXPERIMENT] exp_2017_2019_eval_2020
+- train_years: [2017, 2019]
+- eval_year: 2020
+  · MANIFEST:
+  - core: {"val_metric": "h3_roc", "best_epoch": 6, "best_val": 0.7369569088319088, "sampler_h_ref": 3}
+  - thresholding: {"policy": "budget", "budget": 0.1, "cost_fn": 5.0, "cost_fp": 1.0, "calibration": "platt"}
+  - train_hparams: {"epochs": 6, "batch_size": 8, "lr": 0.0002, "weight_decay": 0.02, "loss": "focal", "focal": {"alpha": 0.85, "gamma": 2.0}, "h_weights": [0.0, 1.0], "mask_policy": "any", "input_len": 12}
+  - model_cfg: {"param_count": 24571830, "patch_size": 32, "embed_ch": 8, "country_emb": 8, "static_drop": 0.5}
+  - args_select: {"exp_mode": "next_year", "calib_window_months": 12, "label_suffix": "thr1.8", "min_train_pos_per_country": 1, "h_weights": [0.0, 1.0], "val_metric": "h3_roc", "th_policy": "budget", "budget": 0.1, "calibration": "platt", "sampler_h_ref": "auto", "seed": 41}
+  · TEST METRICS (from CSV):
+    - h1: AUROC=0.462 AUPRC=0.040 Brier=0.043 ECE=0.040 Hit@b=0.056 FA@b=10.238
+    - h3: AUROC=0.624 AUPRC=0.175 Brier=0.120 ECE=0.118 Hit@b=0.115 FA@b=8.810
+  · MONTHLY (h1): AUROC median=0.416, min=0.000, max=0.906 (n_months=8)
+               AUPRC median=0.090, min=0.029, max=0.383
+  · MONTHLY (h3): AUROC median=0.605, min=0.458, max=0.882 (n_months=12)
+               AUPRC median=0.189, min=0.099, max=0.497
+  · PRED SUMMARY (recomputed, budget=0.1):
+    - h1: n=420 pos=18 pos_rate=0.043 | AUROC=0.462 AUPRC=0.040 Brier=0.043 ECE=0.040 | Hit@b=0.056 FA@b=10.24 thr@b=0.085
+    - h3: n=420 pos=52 pos_rate=0.124 | AUROC=0.624 AUPRC=0.175 Brier=0.120 ECE=0.118 | Hit@b=0.115 FA@b=8.57 thr@b=0.281
+    - h1 top-positives months:
+       · 2020-01-01 : 4
+       · 2020-03-01 : 3
+       · 2020-07-01 : 3
+       · 2020-02-01 : 2
+       · 2020-05-01 : 2
+    - h3 top-positives months:
+       · 2020-01-01 : 9
+       · 2020-12-01 : 7
+       · 2020-11-01 : 6
+       · 2020-02-01 : 5
+       · 2020-03-01 : 5
+  · generalization_gap (h3 auroc): test(0.624) - val(0.737) = -0.113
+  · FILES present: best_v7.pt, calibrators.pkl, manifest.json, metrics_next_year.csv, metrics_next_year_by_month.csv, preds_next_year.parquet
+========================================================================================
+[EXPERIMENT] exp_2017_2020_eval_2021
+- train_years: [2017, 2020]
+- eval_year: 2021
+  · MANIFEST:
+  - core: {"val_metric": "h3_roc", "best_epoch": 6, "best_val": 0.8415419501133787, "sampler_h_ref": 3}
+  - thresholding: {"policy": "budget", "budget": 0.1, "cost_fn": 5.0, "cost_fp": 1.0, "calibration": "platt"}
+  - train_hparams: {"epochs": 6, "batch_size": 8, "lr": 0.0002, "weight_decay": 0.02, "loss": "focal", "focal": {"alpha": 0.85, "gamma": 2.0}, "h_weights": [0.0, 1.0], "mask_policy": "all", "input_len": 12}
+  - model_cfg: {"param_count": 24571830, "patch_size": 32, "embed_ch": 8, "country_emb": 8, "static_drop": 0.5}
+  - args_select: {"exp_mode": "next_year", "calib_window_months": 18, "label_suffix": "thr1.8", "min_train_pos_per_country": 2, "h_weights": [0.0, 1.0], "val_metric": "h3_roc", "th_policy": "budget", "budget": 0.1, "calibration": "platt", "sampler_h_ref": "3", "seed": 41}
+  · TEST METRICS (from CSV):
+    - h1: AUROC=0.490 AUPRC=0.053 Brier=0.050 ECE=0.010 Hit@b=0.136 FA@b=10.714
+    - h3: AUROC=0.553 AUPRC=0.173 Brier=0.134 ECE=0.045 Hit@b=0.076 FA@b=9.048
+  · MONTHLY (h1): AUROC median=0.545, min=0.118, max=0.779 (n_months=11)
+               AUPRC median=0.103, min=0.032, max=0.256
+  · MONTHLY (h3): AUROC median=0.525, min=0.302, max=0.709 (n_months=12)
+               AUPRC median=0.207, min=0.072, max=0.418
+  · PRED SUMMARY (recomputed, budget=0.1):
+    - h1: n=420 pos=22 pos_rate=0.052 | AUROC=0.490 AUPRC=0.053 Brier=0.050 ECE=0.010 | Hit@b=0.136 FA@b=10.71 thr@b=0.062
+    - h3: n=420 pos=66 pos_rate=0.157 | AUROC=0.553 AUPRC=0.173 Brier=0.134 ECE=0.045 | Hit@b=0.076 FA@b=8.81 thr@b=0.254
+    - h1 top-positives months:
+       · 2021-04-01 : 4
+       · 2021-01-01 : 3
+       · 2021-06-01 : 3
+       · 2021-02-01 : 2
+       · 2021-07-01 : 2
+    - h3 top-positives months:
+       · 2021-04-01 : 8
+       · 2021-02-01 : 7
+       · 2021-06-01 : 7
+       · 2021-01-01 : 6
+       · 2021-03-01 : 6
+  · generalization_gap (h3 auroc): test(0.553) - val(0.842) = -0.289
+  · FILES present: best_v7.pt, calibrators.pkl, manifest.json, metrics_next_year.csv, metrics_next_year_by_month.csv, preds_next_year.parquet
+========================================================================================
+[EXPERIMENT] exp_2017_2021_eval_2022
+- train_years: [2017, 2021]
+- eval_year: 2022
+  · MANIFEST:
+  - core: {"val_metric": "h3_roc", "best_epoch": 5, "best_val": 0.8482687946973662, "sampler_h_ref": 3}
+  - thresholding: {"policy": "budget", "budget": 0.1, "cost_fn": 5.0, "cost_fp": 1.0, "calibration": "platt"}
+  - train_hparams: {"epochs": 6, "batch_size": 8, "lr": 0.0002, "weight_decay": 0.02, "loss": "focal", "focal": {"alpha": 0.85, "gamma": 2.0}, "h_weights": [0.0, 1.0], "mask_policy": "all", "input_len": 12}
+  - model_cfg: {"param_count": 24571830, "patch_size": 32, "embed_ch": 8, "country_emb": 8, "static_drop": 0.5}
+  - args_select: {"exp_mode": "next_year", "calib_window_months": 18, "label_suffix": "thr1.8", "min_train_pos_per_country": 2, "h_weights": [0.0, 1.0], "val_metric": "h3_roc", "th_policy": "budget", "budget": 0.1, "calibration": "platt", "sampler_h_ref": "3", "seed": 41}
+  · TEST METRICS (from CSV):
+    - h1: AUROC=0.655 AUPRC=0.048 Brier=0.024 ECE=0.021 Hit@b=0.200 FA@b=10.000
+    - h3: AUROC=0.601 AUPRC=0.156 Brier=0.063 ECE=0.077 Hit@b=0.385 FA@b=7.619
+  · MONTHLY (h1): AUROC median=0.794, min=0.258, max=0.941 (n_months=5)
+               AUPRC median=0.137, min=0.056, max=0.333
+  · MONTHLY (h3): AUROC median=0.576, min=0.147, max=0.971 (n_months=12)
+               AUPRC median=0.299, min=0.033, max=0.533
+  · PRED SUMMARY (recomputed, budget=0.1):
+    - h1: n=420 pos=10 pos_rate=0.024 | AUROC=0.655 AUPRC=0.048 Brier=0.024 ECE=0.021 | Hit@b=0.200 FA@b=10.00 thr@b=0.046
+    - h3: n=420 pos=26 pos_rate=0.062 | AUROC=0.601 AUPRC=0.156 Brier=0.063 ECE=0.077 | Hit@b=0.385 FA@b=7.62 thr@b=0.210
+    - h1 top-positives months:
+       · 2022-01-01 : 4
+       · 2022-07-01 : 2
+       · 2022-10-01 : 2
+       · 2022-03-01 : 1
+       · 2022-05-01 : 1
+    - h3 top-positives months:
+       · 2022-01-01 : 5
+       · 2022-05-01 : 3
+       · 2022-12-01 : 3
+       · 2022-03-01 : 2
+       · 2022-06-01 : 2
+  · generalization_gap (h3 auroc): test(0.601) - val(0.848) = -0.247
+  · FILES present: best_v7.pt, calibrators.pkl, manifest.json, metrics_next_year.csv, metrics_next_year_by_month.csv, preds_next_year.parquet
+========================================================================================
+[EXPERIMENT] exp_2017_2022_eval_2023
+- train_years: [2017, 2022]
+- eval_year: 2023
+  · MANIFEST:
+  - core: {"val_metric": "h3_roc", "best_epoch": 6, "best_val": 0.8671164603271387, "sampler_h_ref": 3}
+  - thresholding: {"policy": "budget", "budget": 0.1, "cost_fn": 5.0, "cost_fp": 1.0, "calibration": "platt"}
+  - train_hparams: {"epochs": 6, "batch_size": 8, "lr": 0.0002, "weight_decay": 0.02, "loss": "focal", "focal": {"alpha": 0.85, "gamma": 2.0}, "h_weights": [0.0, 1.0], "mask_policy": "all", "input_len": 12}
+  - model_cfg: {"param_count": 24571830, "patch_size": 32, "embed_ch": 8, "country_emb": 8, "static_drop": 0.5}
+  - args_select: {"exp_mode": "next_year", "calib_window_months": 18, "label_suffix": "thr1.8", "min_train_pos_per_country": 2, "h_weights": [0.0, 1.0], "val_metric": "h3_roc", "th_policy": "budget", "budget": 0.1, "calibration": "platt", "sampler_h_ref": "3", "seed": 41}
+  · TEST METRICS (from CSV):
+    - h1: AUROC=0.517 AUPRC=0.033 Brier=0.028 ECE=0.009 Hit@b=0.000 FA@b=10.159
+    - h3: AUROC=0.714 AUPRC=0.210 Brier=0.065 ECE=0.013 Hit@b=0.261 FA@b=8.254
+  · MONTHLY (h1): AUROC median=0.471, min=0.176, max=0.824 (n_months=7)
+               AUPRC median=0.095, min=0.034, max=0.143
+  · MONTHLY (h3): AUROC median=0.781, min=0.029, max=0.853 (n_months=9)
+               AUPRC median=0.167, min=0.029, max=0.521
+  · PRED SUMMARY (recomputed, budget=0.1):
+    - h1: n=315 pos=9 pos_rate=0.029 | AUROC=0.517 AUPRC=0.033 Brier=0.028 ECE=0.009 | Hit@b=0.000 FA@b=10.16 thr@b=0.040
+    - h3: n=315 pos=23 pos_rate=0.073 | AUROC=0.714 AUPRC=0.210 Brier=0.065 ECE=0.013 | Hit@b=0.261 FA@b=8.25 thr@b=0.114
+    - h1 top-positives months:
+       · 2023-02-01 : 2
+       · 2023-05-01 : 2
+       · 2023-01-01 : 1
+       · 2023-03-01 : 1
+       · 2023-04-01 : 1
+    - h3 top-positives months:
+       · 2023-01-01 : 4
+       · 2023-02-01 : 4
+       · 2023-03-01 : 4
+       · 2023-04-01 : 3
+       · 2023-05-01 : 2
+  · generalization_gap (h3 auroc): test(0.714) - val(0.867) = -0.153
+  · FILES present: best_v7.pt, calibrators.pkl, manifest.json, metrics_next_year.csv, metrics_next_year_by_month.csv, preds_next_year.parquet
+DATASET prevalence (h1, suffix=thr1.8): valid=2520 pos=101 rate=0.0401
+DATASET prevalence (h3, suffix=thr1.8): valid=2450 pos=303 rate=0.1237
+========================================================================================
+
+[OK] report saved to: series_v7_AFR_thr18_h3only_safe_v2_e6_s41/_report.txt

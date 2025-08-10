@@ -646,7 +646,7 @@ Why do these results matter for economists? Two reasons:
 
 ---
 
-## (Sketch) F6. ROC/PR Curves (per year, h=3)
+## (Sketch) F6. ROC/PR Curves (per year, h=3) 
 
 * **목적**: 연도별 분류력(ROC)과 희소성 민감도(PRC)의 곡선형 비교.
 * **데이터**: `roc_curve_h3.csv`, `pr_curve_h3.csv` (테스트 세트) 또는 `preds_next_year.parquet` 필요.
@@ -658,19 +658,19 @@ Why do these results matter for economists? Two reasons:
 * **데이터**: 테스트 예측 확률 + 레이블 필요(`preds_next_year.parquet`).
 * **구성**: 10-bin reliability curve + 완전보정(대각선) + 빈도 히스토그램(하단).
 
-## (Sketch) F8. Budget–Recall / Budget–FA Curve (h=3, 2023)
+## (Sketch) F8. Budget–Recall / Budget–FA Curve (h=3, 2023) // 뺄듯
 
 * **목적**: 운영 예산(b)의 조정에 따른 정탐률/오경보 trade-off.
 * **데이터**: 테스트 예측 확률(전체 분포) 필요.
 * **구성**: x=Budget(1%\~20%), y1=Hit\@b(라인), y2=FA\@b/100(보조 y축 라인). 기준점(b=10%) 마커 강조.
 
-## (Sketch) F9. “Year-span effect” Line (train-span vs Test AUROC, h=3)
+## (Sketch) F9. “Year-span effect” Line (train-span vs Test AUROC, h=3) // 이거 중요 학습 다다익선 강조
 
 * **목적**: 학습연도 폭이 넓을수록 OOS(특히 2023)가 안정적이라는 정성 결과의 정량 시각화.
 * **데이터**: T2의 `TrainYears`를 길이(년수)로 변환하여 x축(2\~6년), y축=Test AUROC.
 * **구성**: 선형/스텝 라인. 각 포인트에 (EvalYear) 주석.
 
-## (Sketch) F10. Month-level Support vs AUROC (h=3, 2023)
+## (Sketch) F10. Month-level Support vs AUROC (h=3, 2023) // 뺼듯
 
 * **목적**: 월별 표본 규모(유효샘플/양성 수)와 AUROC의 관계.
 * **데이터**: `metrics_next_year_by_month.csv`의 `n`, `pos`.

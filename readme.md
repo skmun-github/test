@@ -191,6 +191,43 @@ $$
 Here $c\in\mathbb{R}^{H}$ is a convex combination of monthly states. Attention learns **how far back** the model should look and which months matter most (e.g., sustained congestion in late summer). A small feed‑forward head then projects $c$ to a 64‑dimensional **temporal summary** $g^{\text{time}}_{a,t}$.
 
 This backbone has three practical advantages. First, sequences of length 12 keep memory bounded and allow training with small batches under full‑resolution rasters upstream. Second, attention exposes **interpretable weights** over months that often correlate with known shipping seasons. Third, the recurrent state naturally accommodates **lags and persistence**, which a pure convolution over time would emulate only with deeper stacks.
+```
+[ Dynamic sequence: X_dyn ]              T = 입력 길이(최근 12개월 등)
+  shape: (B, T, C, H, W)                 B = 배치, C/H/W = 채널/공간 크기
+                │
+                │  (각 시점 t=1..T에 대해)
+                ▼
+        ┌───────────────────┐
+        │   PatchEncoder    │  →  (B, T, Np, E)
+        │  (2×DWConv + PW)  │      Np=patch 개수, E=패치 임베드 차원
+        └───────────────────┘
+                │  평균풀링/리쉐이프
+                ▼
+        [ 시퀀스 임베딩 ]  (B, T, D_dyn)  where D_dyn = Np × E
+                │
+                ▼
+          LayerNorm
+                │
+                ▼
+        ┌───────────────────┐
+        │   GRU (×2 layers) │  → 은닉 상태 {h₁,…,h_T}, h_t ∈ ℝ^H
+        └───────────────────┘
+                │                  ┌─────────────────────────┐
+                ├──────→  score_t = vᵀ tanh(W h_t)          │
+                │                  α_t = softmax(score)_t   │  (Bahdanau)
+                │                  c = Σ_t α_t h_t          │  attention
+                │                  └─────────────────────────┘
+                ▼
+        [ Context vector c ] ∈ ℝ^H
+                │
+                ▼
+        ┌───────────────────────────────┐
+        │  Dense(64) → ReLU → Dropout   │
+        └───────────────────────────────┘
+                │
+                ▼
+          z_time  ∈ ℝ^64    (시간축 요약 표현)
+```
 
 ## 3.4 Static and missingness‑aware block
 
@@ -214,6 +251,34 @@ $$
 A nonlinearity and dropout produce a 256‑dimensional **static summary** $g^{\text{stat}}_{a,t}$.
 
 This design is deliberate. If the model were forced to impute (say, with zeros) and then treat zeros as meaningful values, coefficients would be biased whenever missingness is systematic (e.g., small economies with sparser reporting). By **gating values by $(1-m)$**, we ensure that missing entries do not contribute linearly, yet the presence of a missing entry can still matter through its dedicated indicator (e.g., “no reported GPV this year” might correlate with volatility). The month encoding, appended here rather than to the dynamic branch, lets the static block modulate seasonality of **price transmission** rather than at‑sea traffic per se.
+
+```
+ Inputs (동일 시점의 정적/달 정보)
+ ┌──────────────┐    ┌──────────────┐    ┌────────────────┐
+ │  S_val       │    │  S_mask      │    │  MonthRep      │
+ │(B, D_s)      │    │(B, D_s)      │    │(B, M)          │
+ │ 실수값 벡터   │    │1=결측,0=관측  │    │월 인코딩(원-핫/주기)│
+ └──────┬───────┘    └──────┬───────┘    └────────┬───────┘
+        │                    │                      │
+        └─────────┬──────────┴───────────┬──────────┘
+                  ▼                      ▼
+           x_static = [ S_val  ∥  S_mask  ∥  MonthRep ]
+           m_full   = [ S_mask ∥  0_{D_s} ∥  0_{M}    ]
+                  │                      (m_full은 x_static와 길이 동일)
+                  ▼
+          (Missingness-aware gating)
+           x_tilde = x_static ⊙ (1 - m_full)
+                  │
+                  ▼
+        ┌───────────────────────────────┐
+        │  MaskAware Linear  → ReLU     │  →  (B, 256)
+        │           → Dropout(p≈0.5)    │
+        └───────────────────────────────┘
+                  │
+                  ▼
+            z_static  ∈ ℝ^256   (정적+달 요약 표현)
+
+```
 
 ## 3.5 Country embedding
 

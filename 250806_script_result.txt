@@ -1,0 +1,331 @@
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python emodnet_prepare_tensor_v4.py   --root /home/skmoon/DB/emodnet/emodnet   --start 201701 --end 202312   --ship-types 09 10 all   --bbox 27 40 42 47   --log1p --normalise   --dtype float16 --layout TCHW   --missing nan --add-masks   --sentinel -20   --out ~/data/blacksea_tensor_log1p.npz   --sparse-out ~/data/blacksea_sparse.pt
+21:19:23 [INFO] BBox 3035: 5766622 2041261 6670248 3174381
+21:19:23 [INFO] Tensor (84, 1133, 904, 5)
+21:19:46 [INFO] Dense NPZ → /home/skmoon/data/blacksea_tensor_log1p.npz (820.5 MiB)
+21:19:48 [INFO] Sparse PT → /home/skmoon/data/blacksea_sparse.pt (91.9 MiB)
+/home/skmoon/codes/250727_WIP_AIS_new/emodnet_prepare_tensor_v4.py:224: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  generated_utc=datetime.utcnow().isoformat(timespec="seconds")+"Z",
+21:19:48 [INFO] Meta JSON → /home/skmoon/data/blacksea_tensor_log1p.meta.json
+21:19:48 [INFO] Done.
+
+python build_dataset_v4.py \
+  --npz          data/blacksea_tensor_log1p.npz \
+  --meta-json    data/blacksea_tensor_log1p.meta.json \
+  --sparse-pt    data/blacksea_sparse.pt \
+  --price-csv    data/raw/CPIs.csv \
+  --crops-csv    data/raw/Crops_and_livestock_products.csv \
+  --gdp-csv      data/raw/Value_of_Agricultural_Production.csv \
+  --raw-dir      data/raw \
+  --out-dir      data/processed_v4_v2_wS \
+  --window-len   12 \
+  --horizon      1 3 \
+  --scaler       robust \
+  --month-enc    cyclical \
+  --surge-mode   rolling_sigma \
+  --sigma-mult   1.3 \
+  --roll-k       6 \
+  --min-obs      3 \
+  --cv-stride    0 \
+  --val-year     2022 \
+  --use-sparse \
+  --verbose 
+
+python extract_africa.py     --in-dir  data/processed_v4_v2_wS/20250807     --out-dir data/processed_v4_v2_wS_africa
+
+processed_v4_v2_wS_africa
+python train_v4.py \
+--proc-dir     data/processed_v4_v2_wS_africa \
+--epochs       60 \
+--batch-size   8 \
+--lr           2e-4 \
+--weight-decay 1e-2 \
+--patch-size   24 \
+--embed-ch     12 \
+--country-emb  16 \
+--static-drop  0.4 \
+--loss         pos_bce \
+--pos-weight   -1 \
+--device       cuda:0 \
+--num-workers  8 \
+--save-dir     ckpt_stageAB
+
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python train_v4.py --proc-dir     data/processed_v4_v2_wS_africa --epochs       60 --batch-size   8 --lr           4e-4 --weight-decay 1e-2 --patch-size   24 --embed-ch     12 --country-emb  16 --static-drop  0.4 --loss         pos_bce --pos-weight   -1 --device       cuda:0 --num-workers  8 --save-dir     ckpt_stageAB
+17:22:11 [INFO] Model params = 64,275,166
+/home/skmoon/codes/250727_WIP_AIS_new/train_v4.py:306: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler   = torch.cuda.amp.GradScaler()
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:24:22 [INFO] [E001] train_loss=1.2528  val_loss=1.2985  val_F1=0.264  AUROC=('0.617', '0.566')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:26:31 [INFO] [E002] train_loss=1.2342  val_loss=1.3326  val_F1=0.267  AUROC=('0.586', '0.568')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:28:40 [INFO] [E003] train_loss=1.2227  val_loss=1.3157  val_F1=0.268  AUROC=('0.595', '0.548')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:30:49 [INFO] [E004] train_loss=1.2219  val_loss=1.2948  val_F1=0.267  AUROC=('0.599', '0.557')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:32:58 [INFO] [E005] train_loss=1.2075  val_loss=1.2473  val_F1=0.266  AUROC=('0.573', '0.549')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:35:08 [INFO] [E006] train_loss=1.1730  val_loss=1.2745  val_F1=0.267  AUROC=('0.574', '0.558')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:37:17 [INFO] [E007] train_loss=1.1586  val_loss=1.3540  val_F1=0.272  AUROC=('0.568', '0.566')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:39:26 [INFO] [E008] train_loss=1.1618  val_loss=1.2808  val_F1=0.266  AUROC=('0.558', '0.548')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:41:35 [INFO] [E009] train_loss=1.1574  val_loss=1.2899  val_F1=0.267  AUROC=('0.567', '0.541')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:43:45 [INFO] [E010] train_loss=1.1314  val_loss=1.3179  val_F1=0.268  AUROC=('0.569', '0.548')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:45:54 [INFO] [E011] train_loss=1.1255  val_loss=1.2748  val_F1=0.271  AUROC=('0.576', '0.550')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:48:03 [INFO] [E012] train_loss=1.1274  val_loss=1.2258  val_F1=0.270  AUROC=('0.563', '0.564')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:50:12 [INFO] [E013] train_loss=1.1119  val_loss=1.2797  val_F1=0.272  AUROC=('0.542', '0.552')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:52:21 [INFO] [E014] train_loss=1.1167  val_loss=1.3033  val_F1=0.269  AUROC=('0.537', '0.544')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:54:30 [INFO] [E015] train_loss=1.1342  val_loss=1.2674  val_F1=0.272  AUROC=('0.560', '0.549')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:56:40 [INFO] [E016] train_loss=1.0918  val_loss=1.2897  val_F1=0.274  AUROC=('0.530', '0.555')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+17:58:49 [INFO] [E017] train_loss=1.1117  val_loss=1.3141  val_F1=0.275  AUROC=('0.544', '0.554')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:00:58 [INFO] [E018] train_loss=1.1082  val_loss=1.2905  val_F1=0.271  AUROC=('0.545', '0.522')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:03:07 [INFO] [E019] train_loss=1.0971  val_loss=1.2769  val_F1=0.270  AUROC=('0.557', '0.546')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:05:16 [INFO] [E020] train_loss=1.0989  val_loss=1.2578  val_F1=0.274  AUROC=('0.540', '0.553')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:07:25 [INFO] [E021] train_loss=1.0991  val_loss=1.3307  val_F1=0.276  AUROC=('0.543', '0.546')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:09:35 [INFO] [E022] train_loss=1.0709  val_loss=1.2864  val_F1=0.274  AUROC=('0.539', '0.553')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:11:44 [INFO] [E023] train_loss=1.0973  val_loss=1.2869  val_F1=0.274  AUROC=('0.533', '0.547')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:13:53 [INFO] [E024] train_loss=1.0492  val_loss=1.2629  val_F1=0.278  AUROC=('0.550', '0.545')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:16:02 [INFO] [E025] train_loss=1.0647  val_loss=1.2804  val_F1=0.277  AUROC=('0.555', '0.550')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:18:12 [INFO] [E026] train_loss=1.0710  val_loss=1.3188  val_F1=0.276  AUROC=('0.545', '0.552')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:20:21 [INFO] [E027] train_loss=1.0405  val_loss=1.3130  val_F1=0.274  AUROC=('0.546', '0.544')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:22:30 [INFO] [E028] train_loss=1.0673  val_loss=1.3006  val_F1=0.276  AUROC=('0.551', '0.549')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:24:40 [INFO] [E029] train_loss=1.0552  val_loss=1.3037  val_F1=0.275  AUROC=('0.546', '0.550')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:26:49 [INFO] [E030] train_loss=1.0807  val_loss=1.2792  val_F1=0.274  AUROC=('0.552', '0.542')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:28:59 [INFO] [E031] train_loss=1.0562  val_loss=1.2834  val_F1=0.276  AUROC=('0.555', '0.544')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:31:08 [INFO] [E032] train_loss=1.0620  val_loss=1.2952  val_F1=0.274  AUROC=('0.550', '0.538')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:33:18 [INFO] [E033] train_loss=1.0511  val_loss=1.2933  val_F1=0.276  AUROC=('0.549', '0.541')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:35:27 [INFO] [E034] train_loss=1.0422  val_loss=1.2816  val_F1=0.274  AUROC=('0.557', '0.540')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:37:37 [INFO] [E035] train_loss=1.0567  val_loss=1.3050  val_F1=0.275  AUROC=('0.555', '0.542')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:39:46 [INFO] [E036] train_loss=1.0708  val_loss=1.3096  val_F1=0.277  AUROC=('0.550', '0.545')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:41:56 [INFO] [E037] train_loss=1.0697  val_loss=1.2893  val_F1=0.276  AUROC=('0.543', '0.545')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:44:05 [INFO] [E038] train_loss=1.0524  val_loss=1.2916  val_F1=0.274  AUROC=('0.548', '0.544')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:46:14 [INFO] [E039] train_loss=1.0476  val_loss=1.2869  val_F1=0.276  AUROC=('0.546', '0.545')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:48:24 [INFO] [E040] train_loss=1.0633  val_loss=1.2988  val_F1=0.276  AUROC=('0.548', '0.545')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:50:33 [INFO] [E041] train_loss=1.0518  val_loss=1.2796  val_F1=0.278  AUROC=('0.548', '0.547')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:52:42 [INFO] [E042] train_loss=1.0460  val_loss=1.2787  val_F1=0.276  AUROC=('0.545', '0.547')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:54:52 [INFO] [E043] train_loss=1.0348  val_loss=1.2986  val_F1=0.276  AUROC=('0.545', '0.545')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s] 
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s] 
+18:57:01 [INFO] [E044] train_loss=1.0463  val_loss=1.2951  val_F1=0.277  AUROC=('0.544', '0.550')
+18:57:01 [INFO] Early-stopping triggered
+18:57:01 [INFO] Saved best model → ckpt_stageAB/best_v4.pt
+TEST:   0%|                                             | 0/102 [00:00<?, ?it/s] 
+18:57:24 [INFO] TEST  loss=1.2402  F1=0.277  AUROC=('0.645', '0.548')  AUPRC=('0.257', '0.188')
+
+
+
+
+
+###
+python finetune.py \
+  --proc-dir   data/processed_v4_v2_wS_africa \
+  --ckpt       ckpt_stageAB/best_v4.pt \
+  --iso3       KEN \
+  --epochs     30 \
+  --batch-size 8 \
+  --lr         1e-5 \
+  --weight-decay 1e-2 \
+  --freeze     patch static \
+  --patch-size 24 \
+  --embed-ch   12 \
+  --country-emb 16 \
+  --loss       pos_bce \
+  --pos-weight -1 \
+  --device     cuda:0 \
+  --num-workers 8 \
+  --save-dir   ckpt_KEN_finetune
+
+
+
+####
+
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python emodnet_prepare_tensor_v4.py   --root /home/skmoon/DB/emodnet/emodnet   --start 201701 --end 202312   --ship-types 09 10 all   --bbox 27 40 42 47   --log1p --normalise   --dtype float16 --layout TCHW   --missing nan --add-masks   --sentinel -20   --out ~/data/blacksea_tensor_log1p.npz   --sparse-out ~/data/blacksea_sparse.pt
+21:19:23 [INFO] BBox 3035: 5766622 2041261 6670248 3174381
+21:19:23 [INFO] Tensor (84, 1133, 904, 5)
+21:19:46 [INFO] Dense NPZ → /home/skmoon/data/blacksea_tensor_log1p.npz (820.5 MiB)
+21:19:48 [INFO] Sparse PT → /home/skmoon/data/blacksea_sparse.pt (91.9 MiB)
+/home/skmoon/codes/250727_WIP_AIS_new/emodnet_prepare_tensor_v4.py:224: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  generated_utc=datetime.utcnow().isoformat(timespec="seconds")+"Z",
+21:19:48 [INFO] Meta JSON → /home/skmoon/data/blacksea_tensor_log1p.meta.json
+21:19:48 [INFO] Done.
+
+python build_dataset_v4.py \
+  --npz          data/blacksea_tensor_log1p.npz \
+  --meta-json    data/blacksea_tensor_log1p.meta.json \
+  --sparse-pt    data/blacksea_sparse.pt \
+  --price-csv    data/raw/CPIs.csv \
+  --crops-csv    data/raw/Crops_and_livestock_products.csv \
+  --gdp-csv      data/raw/Value_of_Agricultural_Production.csv \
+  --raw-dir      data/raw \
+  --out-dir      data/processed_v4_v2_wS \
+  --window-len   12 \
+  --horizon      1 3 \
+  --scaler       robust \
+  --month-enc    cyclical \
+  --surge-mode   rolling_sigma \
+  --sigma-mult   1.3 \
+  --roll-k       6 \
+  --min-obs      3 \
+  --cv-stride    0 \
+  --val-year     2022 \
+  --use-sparse \
+  --verbose 
+
+python extract_africa.py     --in-dir  data/processed_v4_v2_wS/20250807     --out-dir data/processed_v4_v2_wS_africa
+ 
+
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python train_v4.py --proc-dir     data/processed_v4_v2_wS_africa --epochs       6 --batch-size   8 --lr           4e-4 --weight-decay 1e-2 --patch-size   24 --embed-ch     12 --country-emb  16 --static-drop  0.4 --loss         pos_bce --pos-weight   -1 --device       cuda:0 --num-workers  8 --save-dir     ckpt_stageAB
+22:37:24 [INFO] Model params = 64,275,166
+/home/skmoon/codes/250727_WIP_AIS_new/train_v4.py:308: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler   = torch.cuda.amp.GradScaler()
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s]
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s]
+22:39:41 [INFO] [E001] train_loss=0.5975  val_loss=0.5449  val_F1=0.291  AUROC=('0.616', '0.564')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s]
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s]
+22:41:54 [INFO] [E002] train_loss=0.5885  val_loss=0.5606  val_F1=0.284  AUROC=('0.583', '0.562')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s]
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s]
+22:44:07 [INFO] [E003] train_loss=0.5897  val_loss=0.5471  val_F1=0.281  AUROC=('0.600', '0.546')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s]
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s]
+22:46:19 [INFO] [E004] train_loss=0.5898  val_loss=0.5552  val_F1=0.291  AUROC=('0.609', '0.550')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s]
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s]
+22:48:31 [INFO] [E005] train_loss=0.5784  val_loss=0.5328  val_F1=0.279  AUROC=('0.599', '0.548')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s]
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s]
+22:50:42 [INFO] [E006] train_loss=0.5725  val_loss=0.5434  val_F1=0.283  AUROC=('0.598', '0.550')
+22:50:42 [INFO] Saved best model → ckpt_stageAB/best_v4.pt
+TEST:   0%|                                             | 0/102 [00:00<?, ?it/s]
+22:51:03 [INFO] TEST  loss=0.5343  F1=0.279  AUROC=('0.582', '0.551')  AUPRC=('0.238', '0.212')
+
+
+
+####
+python build_dataset_v4.py   --npz          data/blacksea_tensor_log1p.npz   --meta-json    data/blacksea_tensor_log1p.meta.json   --sparse-pt    data/blacksea_sparse.pt   --price-csv    data/raw/CPIs.csv   --crops-csv    data/raw/Crops_and_livestock_products.csv   --gdp-csv      data/raw/Value_of_Agricultural_Production.csv   --raw-dir      data/raw   --out-dir      data/processed_v4_ifpa   --window-len   12   --horizon      1 3   --scaler       robust   --month-enc    cyclical   --surge-mode   ifpa            --ifpa-gamma   0.25            --ifpa-thr     1.0             --cv-stride    0   --val-year     2022   --use-sparse   --verbose
+01:24:47 [INFO] Sparse COO ➜ dense loaded (shape (84, 5, 1133, 904))
+01:24:51 [INFO] X_win torch.Size([72, 12, 5, 1133, 904])  windows=72
+01:24:51 [INFO] Countries=135
+01:24:56 [INFO] ✅ Finished → data/processed_v4_ifpa/20250808 (17.7s)                                                                                                                   
+
+
+python extract_africa.py     --in-dir  data/processed_v4_ifpa/20250808     --out-dir data/processed_v4_ifpa_africa
+
+python train_v4.py --proc-dir     data/processed_v4_ifpa_africa --epochs       60 --batch-size   8 --lr           4e-4 --weight-decay 1e-2 --patch-size   24 --embed-ch     12 --country-emb  16 --static-drop  0.4 --loss         pos_bce --pos-weight   -1 --device       cuda:0 --num-workers  8 --save-dir     ckpt_stageAB
+
+
+
+
+####
+
+
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python build_dataset_v4.py   --npz          data/blacksea_tensor_log1p.npz   --meta-json    data/blacksea_tensor_log1p.meta.json   --sparse-pt    data/blacksea_sparse.pt   --price-csv    data/raw/CPIs.csv   --crops-csv    data/raw/Crops_and_livestock_products.csv   --gdp-csv      data/raw/Value_of_Agricultural_Production.csv   --raw-dir      data/raw   --out-dir      data/processed_v4_ifpa   --window-len   12   --horizon      1 3   --scaler       robust   --month-enc    cyclical   --surge-mode   ifpa            --ifpa-gamma   0.5            --ifpa-thr     2.0             --cv-stride    0   --val-year     2022   --use-sparse   --verbose
+21:09:56 [INFO] Sparse COO ➜ dense loaded (shape (84, 5, 1133, 904))
+21:09:59 [INFO] X_win torch.Size([72, 12, 5, 1133, 904])  windows=72
+21:09:59 [INFO] Countries=135
+21:10:04 [INFO] ✅ Finished → data/processed_v4_ifpa/20250809 (15.9s)                                                                                                                   
+(dl5090) skmoon@skmoon-OMEN-by-HP-45L-Gaming-Desktop-GT22-3xxx:~/codes/250727_WIP_AIS_new$ python train_v4.py --proc-dir     data/processed_v4_ifpa_africa --epochs       6 --batch-size   8 --lr           4e-4 --weight-decay 1e-2 --patch-size   24 --embed-ch     12 --country-emb  16 --static-drop  0.4 --loss         pos_bce --pos-weight   -1 --device       cuda:0 --num-workers  8 --save-dir     ckpt_stageAB
+21:11:44 [INFO] Model params = 64,275,166
+/home/skmoon/codes/250727_WIP_AIS_new/train_v4.py:308: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler   = torch.cuda.amp.GradScaler()
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s]
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s]
+21:14:00 [INFO] [E001] train_loss=0.6194  val_loss=0.8307  val_F1=0.760  AUROC=('0.591', '0.637')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s]
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s]
+21:16:13 [INFO] [E002] train_loss=0.5558  val_loss=0.8382  val_F1=0.761  AUROC=('0.611', '0.656')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s]
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s]
+21:18:25 [INFO] [E003] train_loss=0.5257  val_loss=0.8589  val_F1=0.768  AUROC=('0.618', '0.662')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s]
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s]
+21:20:38 [INFO] [E004] train_loss=0.5056  val_loss=0.8751  val_F1=0.763  AUROC=('0.615', '0.658')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s]
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s]
+21:22:51 [INFO] [E005] train_loss=0.4793  val_loss=0.9128  val_F1=0.762  AUROC=('0.618', '0.663')
+TRAIN:   0%|                                            | 0/408 [00:00<?, ?it/s]
+VAL:   0%|                                              | 0/102 [00:00<?, ?it/s]
+21:25:04 [INFO] [E006] train_loss=0.4790  val_loss=0.9027  val_F1=0.765  AUROC=('0.619', '0.664')
+21:25:04 [INFO] Saved best model → ckpt_stageAB/best_v4.pt
+TEST:   0%|                                             | 0/102 [00:00<?, ?it/s]
+21:25:25 [INFO] TEST  loss=0.7702  F1=0.469  AUROC=('0.507', '0.509')  AUPRC=('0.352', '0.262')
+

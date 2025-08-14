@@ -278,6 +278,8 @@ Batch \(B\), window \(L_A\), horizon \(H_A\), targets \(Q_A\).
 
 
 
+( version 2)
+
 ## 3) Methodology
 
 This project is designed as a three-stage, end-to-end forecasting pipeline that links hydrometeorology on the Mississippi River to near-river logistics and finally to international trade flows through the Port of New Orleans. Each stage produces supervised targets that become structured inputs to the next stage. The model stack emphasizes (i) spatiotemporal learning with physically meaningful features (river miles, gage/bridge geometry, lock positions), (ii) multi-horizon forecasts with calibrated uncertainty, and (iii) reconciliation between daily/weekly logistics signals and monthly customs statistics to ensure operational usefulness and statistical coherence.

@@ -176,3 +176,99 @@ Below are the **minimum viable datasets**, **why** each is needed, and **how** w
 ### 2.7 What this setup enables (for the later sections)
 
 With these data and transformations, Stage-A models learn **how much hydrology “translates” into river capacity frictions** (stages/clearances, restrictions, queueing), and Stage-B models then learn **how those frictions translate into monthly trade by partner** (and **by foreign port** when BOL is licensed). This architecture is aligned with how U.S. agencies produce and use these data—and is fully auditable against their definitions and reporting standards.
+
+## 3) Methodology — Targets, Features, and Models
+
+### Stage A — Hydrometeorology ⇒ Navigational/operational constraints
+
+**Targets (daily, multi-horizon).** We forecast the operational signals that mariners and forecasters use around New Orleans: (i) **river stage at New Orleans (Carrollton gage; station NORL1, river mile 102.8 AHP)** in feet relative to LWRP/NAVD88, and (ii) **bridge air-gap at the Huey P. Long Bridge** (NOAA PORTS station 8762002), optionally extended to other spans when instrumented or when a documented clearance-vs-stage relationship exists. These are the canonical references for navigation on the Lower Mississippi and are also the basis for NWS/LMRFC hydrographs. [source](https://water.weather.gov/ahps2/hydrograph.php?wfo=lix&gage=norl1) [source](https://tidesandcurrents.noaa.gov/ports/index.html?port=lm)
+
+**Features (daily).** We use three categories, aligned with multi-horizon forecasting practice:
+
+1) **Observed-past exogenous drivers** \(x^{\text{obs}}\):  
+   • **Daymet v4** gridded daily precipitation, temperature, radiation, vapor pressure (1-km), aggregated to major Mississippi sub-basins with lag embeddings; period 1980–most recent full year. [source](https://daymet.ornl.gov/)  
+   • **National Water Model (NWM) retrospective v2.1** streamflow at selected reaches (hourly re-sampled to daily) for Ohio/Missouri/Upper Mississippi tributaries; 1979–2020. [source](https://registry.opendata.aws/nwm-archive/)  
+   • Prior day stage at NORL1. [source](https://water.weather.gov/ahps2/hydrograph.php?wfo=lix&gage=norl1)
+
+2) **Known-in-advance drivers** \(x^{\text{known}}\):  
+   • Calendar, holiday, and “day-of-year” terms.  
+   • **Official LMRFC 28-day guidance flags/values** where available (operational with short QPF horizon; longer-lead visuals currently experimental). [source](https://www.weather.gov/lmrfc/)
+
+3) **Static metadata** \(s\): river-mile positions, datum offsets (NAVD88↔LWRP), and sensor/bridge identifiers. NORL1 station metadata provides river-mile and datum adjustments used to reconcile LWRP and NAVD88. [source](https://rivergages.mvr.usace.army.mil/)
+
+**Shapes.** Let the encoder window be \(L_A\) days (e.g., 56) and the horizon be \(H_A\) days (e.g., 1–28). Using a batch of \(B\) training instances and \(Q_A\) targets (here \(Q_A\in\{1,2\}\) for stage and air-gap):
+
+- Observed-past inputs: \(X^{\text{obs}}_A \in \mathbb{R}^{B\times L_A\times F^{\text{obs}}_A}\).  
+- Known-future inputs: \(X^{\text{known}}_A \in \mathbb{R}^{B\times (L_A+H_A)\times F^{\text{known}}_A}\).  
+- Static inputs: \(S_A \in \mathbb{R}^{B\times d_s}\).  
+- Targets: \(Y_A \in \mathbb{R}^{B\times H_A\times Q_A}\).
+
+**Model.** We use a **Temporal Fusion Transformer (TFT)** to learn \(f_A:\{X^{\text{obs}}_A,X^{\text{known}}_A,S_A\}\mapsto \widehat{Y}_A\) because it natively separates static covariates, observed-past covariates, and known-future covariates while providing attention-based variable attribution. We pair it with a global univariate baseline (**N-BEATS**) per target. [source](https://arxiv.org/abs/1912.09363) [source](https://arxiv.org/abs/1905.10437)
+
+**Losses and uncertainty.** We train TFT/N-BEATS with **pinball loss** for quantiles \(\tau\in\{0.1,0.5,0.9\}\):  
+\[
+\mathcal{L}_{\tau}(y,\hat y)=\max\{\tau(y-\hat y),(\tau-1)(y-\hat y)\}.
+\]  
+We post-hoc **conformalize** the quantile forecasts on a rolling calibration set (size \(C\)) using **Conformalized Quantile Regression (CQR)**. If \(r_i = y_i - \hat q_{\tau}(x_i)\) on calibration samples \(i=1,\dots,C\), then the adjusted quantile at level \(\tau\) is
+\[
+\tilde q_{\tau}(x) \;=\; \hat q_{\tau}(x) \;+\; \mathrm{Quantile}_{1-\alpha}\{r_1,\dots,r_C\},
+\]
+yielding finite-sample marginal coverage \(1-\alpha\) under exchangeability.
+
+---
+
+### Stage B — Navigational constraints ⇒ Mid-river logistics (weekly)
+
+**Targets (weekly, multi-task).** We predict the **downbound grain barge tonnage at Lock & Dam 27** (Upper Mississippi choke-point feeding the Lower Mississippi) and **grain barge unload counts in the New Orleans region**. Both series are curated openly by USDA AMS in the **Grain Transportation Report (GTR)** and on the **AgTransport** portal; **barge rate indices** (percent of tariff) at St. Louis and other corridors are used as exogenous context and, in some experiments, as auxiliary targets. [source](https://www.ams.usda.gov/services/transportation-analysis/gtr)
+
+**Features (weekly).** We weekly-aggregate Stage-A outputs (e.g., median stage, 7-day changes, frequency of low-clearance hours) and join them with (i) barge **rate** indices (GTR Table 9), (ii) **lock/queue snapshots** from USACE **LPMS** via **Corps Locks**, and (iii) event flags derived from **USACE Navigation Bulletins (NTNI)** and **USCG MSIBs** in the New Orleans sector. [source](https://corpslocks.usace.army.mil/) [source](https://www.mvn.usace.army.mil/Missions/Navigation/Notices-to-Navigation-Interests/) [source](https://homeport.uscg.mil/)
+
+**Shapes.** With weekly window \(L_B\) (e.g., 104 weeks) and horizon \(H_B\) (e.g., 1–8 weeks) over \(N_B\) river nodes/series (e.g., \(\{ \text{L27 tonnage}, \text{NOLA unloads}\}\Rightarrow N_B=2\)):
+
+- Node-wise inputs at week \(t\): \(X_{B,t}\in\mathbb{R}^{N_B\times F_B}\); over a window: \(X^{(L)}_B\in\mathbb{R}^{L_B\times N_B\times F_B}\).  
+- Targets: \(Y_B\in\mathbb{R}^{H_B\times N_B\times Q_B}\) (typically \(Q_B=1\) per node).  
+- If we include additional upstream control points as nodes, \(N_B\) expands naturally; the adjacency is defined by the river network.
+
+**Model.** We model river-propagated impacts using a **Diffusion Convolutional Recurrent Neural Network (DCRNN)** with a directed adjacency \(A\in\{0,1\}^{N_B\times N_B}\) connecting upstream to downstream nodes. The diffusion convolution at order \(K\) uses bidirectional random walks:
+\[
+\textstyle \Gamma(X) \;=\; \sum_{k=0}^{K-1}\!\Big((D_O^{-1}A)^k X \Theta_k^{(f)} \;+\; (D_I^{-1}A^\top)^k X \Theta_k^{(b)}\Big),
+\]
+where \(D_O\) and \(D_I\) are out- and in-degree matrices, \(\Theta^{(f)},\Theta^{(b)}\) are learnable weights, and the recurrent cell handles temporal evolution over \(L_B\) steps. We ensemble DCRNN with a global **TFT** at weekly cadence to capture non-graph covariates (rates, seasonality) and retain interpretability on variable importance.
+
+**Losses and uncertainty.** As in Stage A, we train with horizon-wise pinball loss and overlay **CQR** for calibrated weekly intervals. For rate indices treated as exogenous only, we monitor Granger-style lag responses but do not train on them as targets unless explicitly included in multi-task learning.
+
+---
+
+### Stage C — Mid-river logistics ⇒ International trade through Port of New Orleans (monthly)
+
+**Targets (monthly, multi-output).** We forecast customs-port (**Schedule D**) **monthly export/import value and weight** for the **Port of New Orleans** and, in the extended setup, **foreign port of unlading** (**Schedule K**) and **country** splits by commodity. The Census Bureau documents that **port data are available monthly** via USA Trade Online (2003-present for ports; API coverage since 2013 for many endpoints). Schedule D defines U.S. customs districts/ports; **foreign port of unlading must be reported in Schedule K codes**, maintained by CBP/USACE. [source](https://usatrade.census.gov/) [source](https://www.census.gov/foreign-trade/reference/codes/index.html)
+
+**Features (monthly).** We aggregate Stage-B outputs to calendar months (sums/means), include barge rate levels, and optionally add **AIS vessel-call features** near Southwest Pass/Lower Mississippi anchorages derived from **MarineCadastre** (USCG NAIS-sourced coastal AIS, 2009+; land-based receivers). [source](https://marinecadastre.gov/ais/)
+
+**Shapes and hierarchy.** Let \(T_C\) months in sample and \(M\) bottom-level series (e.g., commodity × foreign port pairs). Stack them column-wise:
+\[
+Y_C \in \mathbb{R}^{T_C \times M},\quad X_C \in \mathbb{R}^{T_C \times F_C}.
+\]
+Let \(S\in\{0,1\}^{m\times M}\) be the **summing matrix** mapping bottom-level series to all nodes in the hierarchy (e.g., bottom → country → total). Base forecasts \(\widehat y\in\mathbb{R}^{M}\) for a given month are reconciled using **MinT**:
+\[
+\tilde y \;=\; S\big(S^\top W^{-1}S\big)^{-1}S^\top W^{-1}\widehat y,
+\]
+where \(W\) is a shrinkage estimate of base-forecast error covariance. This enforces **coherence** across port/foreign-port/country totals and typically improves accuracy.
+
+**Model.** We use a **multi-output TFT** at monthly cadence to produce \(\widehat Y_C\in\mathbb{R}^{H_C\times M}\) for horizon \(H_C\) (e.g., 1–6 months). For sparse series, we add per-series **N-BEATS** univariate baselines and combine via linear stacking before **MinT** reconciliation. The training loss is a weighted sum of (i) sum-normalized pinball losses across series and horizons and (ii) a **coherency penalty** \(\lambda\lVert S\widehat y - \widehat g\rVert_2^2\) on pre-reconciliation predictions, where \(\widehat g\) are model outputs at aggregated nodes, to bias the network toward coherent structure before post-hoc MinT.
+
+**Definitions guarded in labeling.** We keep **Schedule D (customs port)** separate from **Schedule K (foreign port)** in the schema and only reconcile within consistent hierarchies (e.g., K→country totals or D→district totals) to avoid spurious cross-geography learning; the Census glossary specifies that “foreign port of unlading” must be reported **in Schedule K terms**. [source](https://www.census.gov/foreign-trade/reference/codes/index.html)
+
+---
+
+## Implementation-ready tensor summaries (concise)
+
+**Stage A (daily TFT/N-BEATS):**  
+Batch \(B\), window \(L_A\), horizon \(H_A\), targets \(Q_A\).  
+\(\;X^{\text{obs}}_A\in\mathbb{R}^{B\times L_A\times F^{\text{obs}}_A}, \;X^{\text{known}}_A\in\mathbb{R}^{B\times(L_A+H_A)\times F^{\text{known}}_A}, \;S_A\in\mathbb{R}^{B\times d_s}, \;Y_A\in\mathbb{R}^{B\times H_A\times Q_A}.\)
+
+**Stage B (weekly DCRNN+TFT):**  
+\(A\in\{0,1\}^{N_B\times N_B}\) (river network); \(X^{(L)}_B\in\mathbb{R}^{L_B\times N_B\times F_B}; \;Y_B\in\mathbb{R}^{H_B\times N_B\times Q_B}.\)
+
+**Stage C (monthly TFT + MinT):**  
+\(X_C\in\mathbb{R}^{T_C\times F_C};\;Y_C\in\mathbb{R}^{T_C\times M};\) bottom-level base forecasts \(\widehat y\in\mathbb{R}^{M}\) reconciled via MinT with \(S\in\{0,1\}^{m\times M}\).

@@ -272,3 +272,139 @@ Batch \(B\), window \(L_A\), horizon \(H_A\), targets \(Q_A\).
 
 **Stage C (monthly TFT + MinT):**  
 \(X_C\in\mathbb{R}^{T_C\times F_C};\;Y_C\in\mathbb{R}^{T_C\times M};\) bottom-level base forecasts \(\widehat y\in\mathbb{R}^{M}\) reconciled via MinT with \(S\in\{0,1\}^{m\times M}\).
+
+
+
+
+
+
+## 3) Methodology
+
+This project is designed as a three-stage, end-to-end forecasting pipeline that links hydrometeorology on the Mississippi River to near-river logistics and finally to international trade flows through the Port of New Orleans. Each stage produces supervised targets that become structured inputs to the next stage. The model stack emphasizes (i) spatiotemporal learning with physically meaningful features (river miles, gage/bridge geometry, lock positions), (ii) multi-horizon forecasts with calibrated uncertainty, and (iii) reconciliation between daily/weekly logistics signals and monthly customs statistics to ensure operational usefulness and statistical coherence.
+
+---
+
+### Stage A — Hydrometeorology → Navigational/operational constraints
+
+We first translate climate and hydrologic conditions into **navigational constraints** that shippers and pilots actually act on: stage at key river miles, forecast hydrographs, channel clearance under the two New Orleans bridges, salinity intrusion risk, and inferred draft restrictions.
+
+**Targets.**  
+Daily nowcasts/forecasts (1–28 day horizons) for: (a) Mississippi River stage at New Orleans (Carrollton gage, RM 102.8 AHP), (b) bridge air gap (Huey P. Long and Crescent City Connection), and (c) probabilistic *low-flow risk indices* for saltwater wedge intrusion and associated water-quality constraints. These targets are derived from authoritative series and guidance: USACE/NOAA stage at the Carrollton gage (NORL1) and LWRP conversion, NOAA PORTS air-gap sensors, and LMRFC official hydrographs for the Lower Mississippi. We also incorporate retrospective and near-real-time **National Water Model (NWM)** guidance as exogenous covariates to improve lead times beyond the official horizon.
+
+**Features.**  
+(i) **Hydromet drivers**: daily precipitation/temperature and derived indicators from Daymet v4 and/or PRISM (1 km–800 m), aggregated to the Ohio/Missouri/Upper Mississippi sub-basins with flow-timelagged embeddings; (ii) **NWM v2.1 retrospective** (1979–2020) and available v3.0 guidance streams to supply gridded streamflow/soil-moisture covariates; (iii) **Geometrics**: gage-to-bridge clearance mapping formulas (e.g., “air gap = reference minus gage stage” for bridges where that relationship is documented) and LWRP/NAVD88 datum adjustments.
+
+**Models.**  
+For A→constraints we employ a **Temporal Fusion Transformer (TFT)** for multi-horizon forecasting, because it natively handles mixed covariates (static geography, known-in-advance calendars, observed exogenous series) and provides attention-based interpretability on driver importance. We run TFT alongside a strong univariate global baseline (**N-BEATS**) and a graph-aware model for spatial hydrology (**DCRNN**) using the river network as a directed graph; the ensemble reduces variance and improves robustness under regime shifts (e.g., drought years).
+
+**Uncertainty.**  
+We wrap point forecasts with **conformalized quantile regression** to produce distribution-free, finite-sample coverage intervals at each horizon; in backtests we monitor conditional coverage during drought/low-flow regimes separately from normal regimes.
+
+**Why this is reliable.**  
+LMRFC hydrographs are the operational benchmark for the Lower Mississippi; NWM adds gridded physics-based guidance at millions of reaches; PORTS air-gap sensors reflect real clearance conditions used by pilots. Conditioning on these authoritative signals lets the learning system translate weather into **operational constraints** that logistics decisions actually depend on.
+
+---
+
+### Stage B — Navigational/operational constraints → Mid-river logistics & port-approach activity
+
+Stage B predicts **through-river logistics** that respond quickly to hydrology: southbound grain barge tonnage at Lock & Dam 27 (proxy for Lower Mississippi throughput), empty barge returns, barge unloads in the New Orleans region, lock delay/queue metrics, and dynamic bridge-clearance windows.
+
+**Targets.**  
+Weekly totals for: downbound grain tonnage through Lock 27; number of barges unloaded in the New Orleans region; upbound empty barges; and lock/queue delay indicators from USACE LPMS/Corps Locks. These measures are widely used as timely indicators of Mississippi logistics and are curated weekly by USDA AMS in the Grain Transportation Report (with public spreadsheets and dashboards).
+
+**Features.**  
+(i) Stage-A outputs (clearance/draft risk indices; bridge air gaps; forecast stages at New Orleans and upstream control points), (ii) **river-mile graph features** encoding distances, lock positions, tributary confluences; (iii) **calendar/seasonal** drivers (harvest windows); (iv) market context (diesel price, indicative barge rates published by AMS since Oct-2024).
+
+**Models.**  
+We frame B as a **multi-task spatiotemporal forecasting** problem. A **graph recurrent model (DCRNN)** captures propagation from upstream constraints to downstream tonnage/queues over the river network; a **TFT** captures nonlinear interactions and known-in-advance seasonality. We also train direct global baselines (N-BEATS) for each target as variance-reducing components of an ensemble.
+
+**Interpretation & validation.**  
+We use attention/feature attributions (TFT) and impulse-response probes (graph model) to ensure that predicted barge flows respond plausibly to stage/clearance changes. External case studies (e.g., 2022–2024 low-water spikes with elevated barge rates and reduced drafts) are used as out-of-sample stress tests.
+
+---
+
+### Stage C — Mid-river logistics → International trade flows at New Orleans (port-level and country/port pairs)
+
+Stage C maps weekly logistics proxies into **monthly trade outcomes** at the Port of New Orleans—both at the **Schedule D customs-port level** (e.g., New Orleans, code 2002) and at **foreign Schedule K ports/countries** (e.g., Santos, 35141; Rotterdam, 42182), focusing on values and tonnages for river-relevant commodities (grains, fertilizers, petroleum products, steel). We explicitly account for the difference between **customs geography** (Schedule D) and **foreign port geography** (Schedule K) in the Census methodology to avoid mis-assignment of flows.
+
+**Targets & labels.**  
+Monthly export/import values and weights by commodity, foreign port (K-code), and country, sourced from USA Trade Online / Census APIs (with appropriate licensing) and reconciled against Waterborne Commerce Statistics Center (WCSC) port-level statistics to benchmark physical throughput for Lower Mississippi ports.
+
+**Features.**  
+(i) Stage-B outputs lagged/aggregated to calendar months; (ii) river-operational features (bridge clearance availability windows, lock delays); (iii) external demand controls (e.g., seasonality dummies; optional commodity price indicators if included as exogenous features).
+
+**Models.**  
+We cast C as **multi-horizon, multi-output forecasting** with **hierarchical reconciliation**: the model predicts at granular (foreign port × commodity) and aggregates to country and total; we then apply **MinT reconciliation** to enforce additivity and improve statistical efficiency across the hierarchy. The base learner is TFT (for covariate richness) with N-BEATS as a fast univariate complement per series; we train a shared representation across commodities to share statistical strength for sparse series.
+
+**Handling definitional pitfalls.**  
+We encode **port-definition constraints** directly: “Port of unlading/export” in Census data reflects customs processing geography and shipping mode rules; “foreign port of unlading” must be reported in **Schedule K** terms; these are not the same as USACE physical terminal definitions. During labeling we keep fields separate (D vs K) and add mapping tables so the model never learns spurious equivalences.
+
+---
+
+### Cross-stage integration and training protocol
+
+We train the pipeline **sequentially with feedback**. Stage-A and Stage-B are trained first (daily→weekly). Stage-C consumes rolling monthly aggregates of Stage-B predictions and their calibrated uncertainty. For end-to-end optimization we fine-tune with a **multi-task loss** that includes (i) weekly logistics accuracy and (ii) monthly trade accuracy, with penalties for violating hierarchical additivity.
+
+**Temporal cross-validation.**  
+We use **rolling-origin (prequential) evaluation** with expanding windows. For A and B we roll at weekly cadence; for C at monthly cadence. We report scale-free errors such as **MASE/RMSSE** and horizon-wise quantile loss; this is the recommended practice for non-stationary, multi-series forecasting. We stratify folds to ensure that known stress periods (e.g., 2022–2024 low-water) appear in test sets.
+
+**Uncertainty & risk communication.**  
+At every stage we output central forecasts and **conformal** 50/80/90% bands. For C, we propagate upstream uncertainty by Monte-Carlo draws from Stage-B conformal bands into monthly aggregates before applying conformalization at the trade layer, preserving conservative coverage at the business decision point.
+
+**Evaluation under events.**  
+We run **event-study diagnostics** around documented saltwater wedge episodes and bridge-clearance updates (2023–2024) to check that predicted logistics and trade react in the correct direction with realistic lags. We identify event windows from USACE saltwater-wedge bulletins and NOAA PORTS/Coast Pilot update notices.
+
+---
+
+### Feature engineering details (selected)
+
+We standardize **river-mile geometry** and datum conversions so that physical quantities enter the model consistently. The Carrollton gage (RM 102.8 AHP) is treated as the reference for New Orleans; when PORTS air-gap is available we use it directly, and when not, we compute clearance via documented gage formulas or bridge reference points, keeping both **observed** and **derived** features as separate channels. We keep **AHP/NAVD88/LWRP** adjustments explicit as static metadata.
+
+Hydromet grids (Daymet/PRISM) are **basin-weighted and time-lagged** using simple hydrologic travel-time kernels to reflect that rainfall in the Ohio/Missouri basins moves downstream into the Lower Mississippi with delay. We include **NWM** streamflow/soil-moisture at upstream reaches as exogenous features to extend lead time (v2.1 retrospective for backfilling, v3.0 guidance where available).
+
+For **weekly logistics**, we transform the AMS GTR spreadsheets/dashboards into tidy series (Lock 27 downbound tonnage; New Orleans region barge unloads; upbound empties) and align their week-ending dates to the daily Stage-A signals before aggregation. We add **rate** signals (e.g., per-ton barge rates now published by AMS) as exogenous covariates to help the model disambiguate supply vs. constraint-driven slowdowns.
+
+For **monthly trade**, we preserve **Schedule D** (U.S. customs port) and **Schedule K** (foreign port) as separate dimensions; we rely on the Census technical documentation to interpret “port of unlading/export” and on WCSC for physical port-throughput benchmarking.
+
+---
+
+### Robustness, bias control, and ablations
+
+We anticipate **distribution shifts** from infrastructure and policy (e.g., updated bridge clearance references; channel-deepening’s effect on salinity intrusion risk; trade policy shocks). We therefore:  
+• Perform **time-localized recalibration** of conformal intervals during drought/low-flow regimes;  
+• Run **ablation studies** removing each major exogenous block (hydromet, NWM, stage/air-gap, rates) to quantify marginal value;  
+• Stress-test on documented low-water episodes with known operational impacts (reduced barge drafts, spikes in rates, queueing), verifying that Stage-B/C predictions reproduce the direction/magnitude of effects observed in AMS and academic case studies.
+
+---
+
+### Data, access, and licensing (Stage-C enhancement with commercial sources)
+
+Where finer-than-Census granularity is required (e.g., **bill-of-lading–level flows by vessel/foreign terminal**), we will optionally incorporate **paid** datasets as *auxiliary features* or labels for specific experiments:
+
+* **S&P Global PIERS** (U.S. waterborne bills of lading; company names normalized; near-real-time ingestion) — used to build vessel-level panels and foreign **Schedule K** port mappings and to distinguish river-borne exports via New Orleans from rail/truck transloads.  
+* **Descartes Datamyne** (global BOL research platform) — used to cross-validate PIERS entity resolution and to augment shipper/consignee networks for commodities of interest.  
+* **Lloyd’s List Intelligence Seasearcher** or **Spire Maritime Historical AIS** — used to generate independent vessel traffic features (port calls, dwell, AIS-based congestion) near the Lower Mississippi anchorages and Southwest Pass. These improve near-term trade nowcasts and help explain divergences between logistics and customs flows.
+
+---
+
+### Implementation notes
+
+**Granularity & reconciliation.** We train A at **daily** resolution, B at **weekly**, and C at **monthly**. We aggregate upstream predictions to the next stage and apply **MinT** reconciliation at the trade hierarchy (foreign-port → country → total) to ensure coherence across levels and across commodity families.
+
+**Losses & metrics.** Each stage optimizes horizon-aware pinball loss (for quantiles) plus MASE/RMSSE-aligned objectives for point accuracy; model selection relies on rolling-origin validation to avoid look-ahead bias.
+
+**Interpretability.** We will log TFT variable importances and attention maps, keep SHAP-style local explanations for operational variables (e.g., which combination of low stage and air-gap windows suppressed barge unloads), and record counterfactual probes (e.g., “+1 ft at Carrollton for 7 days”) to demonstrate physical plausibility against USACE/NOAA constraints.
+
+**Event-linked validation.** For saltwater wedge episodes, we pair Stage-A salinity-risk indices with USACE timeline bulletins; for bridge-clearance updates, we reference NOAA PORTS/Coast Pilot change notices to ensure predicted clearance windows and vessel passage patterns adjust accordingly.
+
+---
+
+### Why this three-stage, DL-first approach is the most defensible
+
+1) It **grounds** learning in the same operational signals the river community uses (LMRFC hydrographs, PORTS air-gaps, USACE gages) rather than in generic weather features, reducing spurious correlations and improving face validity.  
+2) It **matches decision cadence**: shippers act weekly on draft/clearance constraints (Stage-B), while trade statistics are released monthly (Stage-C). Reconciliation ensures forecasts add up across levels and horizons.  
+3) It **handles uncertainty rigorously** via conformal prediction, giving calibrated intervals at every horizon — crucial for operational planning under drought/low-water regimes.  
+4) It is **data-expandable**: where public sources are too coarse, BOL-level and AIS feeds can be added cleanly as auxiliary features without changing the core physical-to-logistics structure.
+
+This methodology yields a transparent chain from rain and river physics to barge flows and, ultimately, to export volumes and values — exactly the causal pathway your research question aims to quantify.
+

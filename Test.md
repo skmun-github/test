@@ -1,4 +1,619 @@
 
+Below are two complete English translations of your original answers. I’ve kept the structure, terminology, formulas, IPA, and all scenario examples intact while smoothing phrasing for clarity.
+
+⸻
+
+Translation 1
+
+What follows is a scenario‑driven collection (command‑set centric) for a large, multicultural/multilingual family (an India‑like environment), built around IPA (International Phonetic Alphabet) as a first‑class input representation and speaker recognition (optionally enabled). Each scenario shows how the user‑specific Active Lexicon (for execution) and the Defensive Lexicon (for silent reject) change in tandem, and how the threshold (θ) is dynamically adjusted.
+(Checked for alignment with publicly available Samsung ecosystem features—TV Bixby Voice (volume/channel/app), Family Hub Bixby/Alexa, SmartThings Auto Cycle Link, SmartThings room management, and Matter Multi‑Admin.)
+
+IPA note: The IPA given below represents approximate canonical pronunciations and can vary by region/speaker. The system encompasses multiple variants concurrently via a G2P→IPA lattice (e.g., ‘volume up’ /ˈvɒljʊm ʌp/ ~ /ˈvɑːljuːm ʌp/; Hindi ‘awāz badhāo’ “turn up the volume” /aːˈʋaːz bəd̪ʱaːoː/, etc.).
+
+⸻
+
+Common Policy (gist)
+	•	Dual lexicon, matched concurrently: On each device, match both the Active and Defensive lexicons at the same time.
+	•	Execution rule: S^{act}{\max} \ge \theta{act} → Execute.
+	•	Silent reject rule: S^{def}{\max} - S^{act}{\max} \ge \Delta and S^{def}{\max} \ge \theta{def} → Reject & stay silent.
+	•	If competing scores (|…| < Δ): ask a confirmation question or require a room/device token (e.g., “Living room TV …”).
+	•	PRSVO threshold adaptation:
+\theta_k=\alpha+\beta\cdot \text{Len}(k)+\gamma\cdot \text{Conf}(k)+\delta\cdot \text{SNR}^{-1}+\eta\cdot \text{StateBias}
+(Examples of StateBias: near cycle end of wash = −; night Quiet = −; spin/turbo noise = +, etc.)
+	•	Speaker recognition (optional): When ON, apply per‑profile language/expression weighting (e.g., grandparents = Hindi, parents = English/Hinglish). When OFF, use household defaults.
+	•	Orchestration: Combine Auto Cycle Link (washer→dryer), SmartThings room routing, and Matter Multi‑Admin.
+
+⸻
+
+Scenario 1 — “Movie Night” in the Living Room: TV active ↑, AC defensive (simultaneous changes)
+
+Cast: Father (English/Hinglish), grandparents (Hindi), child (English). TV + soundbar + AC all listening.
+	•	TV Active Lexicon (examples):
+“volume up” /ˈvɒljʊm ʌp/, “mute” /mjuːt/, “channel seven” /ˈtʃænəl ˈsɛvən/, “open Netflix” /ˈnɛtflɪks/
+Hindi synonyms: “awāz badhāo” /aːˈʋaːz bəd̪ʱaːoː/, “mute haṭāo (unmute)” /mjuːt ɦəˈʈaːoː/
+	•	AC Defensive Lexicon (examples):
+TV‑only phrases: “volume up/down,” “channel up/down,” “open Netflix,” “mute/unmute” → if matched defensively, stay silent.
+	•	Threshold (PRSVO): In movie mode, lower θ for TV commands; slightly raise θ for AC commands (to prevent false triggers).
+	•	Result: Even if the AC “hears” “volume up” first, the defensive lexicon wins and the AC silently rejects, while the TV executes. (TV Bixby supports volume/channel/app control.)
+
+⸻
+
+Scenario 2 — Washer→Dryer at Cycle End: dryer‑related activation & lowered thresholds near completion
+
+State event: Washer spin/near‑end signal.
+	•	Washer Active Lexicon changes:
+“start dry” /stɑːrt draɪ/, “schedule dry”, Hindi “sukhāna chālu karo (start drying)” /sʊˈkʰaːna t͡ʃaːlu kəro/ (approx.), “send to dryer”.
+	•	θ lowered substantially (easier pass‑through).
+	•	Dryer orchestration: Via Auto Cycle Link/SmartThings, pass context to the dryer (course/time, etc.).
+	•	Concurrent defense: If a child says “volume up” in the same space, the washer/dryer stay silent via TV‑only defensive matching.
+
+⸻
+
+Scenario 3 — Kitchen “Refill Mode”: fridge active ↑, TV/app phrases defensive
+
+Devices: Family Hub refrigerator (voice hub), adjacent TV.
+	•	Fridge Active Lexicon (refill) examples:
+“refill mode,” “add milk/eggs/yogurt,” Hindi “dūdh/andā/yogurt jodo” (approx.)
+	•	Fridge Defensive Lexicon:
+TV/app phrases—“open Netflix,” “change channel,” “volume up,” etc.—match defensively → silent.
+	•	Thresholds: At night, lower θ for “Quiet start / delayed start.”
+	•	Result: Shopping speech is collected & ranked; TV/app commands are ignored (consistent with Family Hub’s Bixby/Alexa voice environment).
+
+⸻
+
+Scenario 4 — Bedroom “Sleep Mode”: AC active ↑, TV defensive
+	•	AC Active Lexicon (examples):
+“sleep mode,” “temperature down one” /ˈtɛmp(ə)rətʃə daʊn/, Hindi “AC thandā karo (make it cooler)” /eːsiː t̪ʰəndaː kəro/ (approx.)
+	•	TV Defensive Lexicon: All volume/channel/app commands → silent.
+	•	Thresholds: In sleep mode, lower θ for AC; raise θ for everything else.
+	•	Result: The AC responds even to soft speech, while the TV remains consistently unresponsive. (TV Bixby has voice sensitivity/language settings.)
+
+⸻
+
+Scenario 5 — Guest Party: noise ↑, focus on lights/audio; high‑risk appliances conservative
+	•	Active: TV/soundbar (“pause music,” “next track”), air purifier (“boost”).
+	•	Defensive: High‑risk kitchen commands such as oven “preheat 180,” microwave “3 minutes” are defensively matched by other devices → silent.
+	•	Thresholds: With low SNR, raise θ for high‑risk appliance commands; allow music/lighting more permissively.
+	•	Result: Music/lighting respond well; kitchen appliances stay safely silent.
+
+⸻
+
+Scenario 6 — Robot Vacuum “Zone Clean” vs. Oven Preheat: mutual defense
+	•	Robot vacuum active: “zone A clean,” “spot clean,” Hindi “gharīb (zone) safai” (approx.)
+	•	Oven active: “preheat 180” /ˌpriːˈhiːt/, “bake,” Hindi “180 par preheat karo”
+	•	Mutual defense: Robot defends against oven phrases; oven defends against robot phrases → cross false positives blocked.
+	•	Orchestration: Completion notifications broadcast to Family Hub/TV (hub).
+
+⸻
+
+Scenario 7 — Living‑room code‑switching (Hindi + English): handling mixed speech
+	•	TV Active (multilingual):
+“volume up,” “mute,” Hindi “awāz badhāo,” “TV band karo (turn off the TV)” /tiːʋiː bənd kəro/
+	•	AC defensive: All of the above phrases are treated defensively → silent.
+	•	Thresholds: With speaker recognition ON, weight grandparents (Hindi) more; OFF → household defaults.
+	•	Result: Mixed utterances are absorbed by the IPA lattice and routed correctly. (Reflects Indian multilingual usage prevalence.)
+
+⸻
+
+Scenario 8 — Child’s short commands & parents’ complex commands: per‑profile weights
+	•	Child profile: TV short forms (“play,” “pause”), AC short (“cooler”) → lower θ for short utterances.
+	•	Parent profile: Sentence‑like forms such as “open Netflix and set volume to 15” → weighted for longer phrasing.
+	•	Defense: Fridge/washer silently reject TV/app phrases via defensive matching.
+	•	Result: Profile layer simultaneously adjusts recognition thresholds and lexicons across multiple devices in the same room.
+
+⸻
+
+Scenario 9 — Kitchen in Hindi, living room in English (Indian multigenerational): room‑preferred language
+	•	Kitchen (Family Hub) active: Hindi shopping (“andā/dūdh jodo,” etc.), with English as fallback.
+	•	Living room (TV) active: English media control, with Hindi as fallback.
+	•	Mutual defense: Kitchen defends against TV phrases; living room defends against shopping phrases.
+	•	Orchestration: List shared via SmartThings; TV receives notifications only.
+
+⸻
+
+Scenario 10 — Air‑quality deterioration (sensor event) + room tokens: reflecting state + location
+	•	Air purifier active: “allergy mode” /ˈælərdʒi/, Hindi “एलर्जी मोड” (approx.)
+	•	Defensive: Nearby AC/TV remain silent via defensive matching.
+	•	Thresholds: Lower θ based on state event; when a room token appears (“Living room …”), execute in that room only.
+	•	Result: Combining sensor state + language reduces false positives.
+
+⸻
+
+Scenario 11 — Coexistence of ecosystems (Alexa + Bixby + SmartThings): routing policy
+	•	Policy: Prefer local execution; when a room token is explicit, route via the hub; if there’s a conflict, ask for confirmation.
+	•	Defense: Phrases dedicated to another agent (e.g., “Alexa, …”) are defensively silenced by other devices.
+	•	Rationale: Matter Multi‑Admin permits simultaneous control across ecosystems.
+
+⸻
+
+Scenario 12 — Unstable network (right after power restoration): on‑device minimal set
+	•	Active: Each device exposes only an essential command subset; slightly raise θ.
+	•	Defense: TV/app/cloud‑dependent phrasing remains defended.
+	•	After recovery: Sync logs/state with the hub.
+
+⸻
+
+How simultaneous changes propagate across devices (summary)
+	•	State event (e.g., washer near end): expand washer Active Lexicon & lower θ; simultaneously trigger Dryer orchestration.
+	•	Room tokens (“Living room TV …”): boost TV activation in that room; strengthen defensive stance for other devices (AC/robot) in the same room.
+	•	Profile entry (grandparents arrive; speaker ID ON): apply Hindi priority weights simultaneously to TV/AC/Family Hub in the room (per‑appliance Active/Defensive sets switch together).
+	•	Time/noise (night/turbo noise): lower θ for “Quiet” intents at night; raise θ for high‑risk/ambiguous commands—changes propagate at once.
+
+⸻
+
+Defensive Lexicon (priority families by category; recommend IPA lattice)
+	•	TV/Soundbar (top defensive priority): “volume up/down,” “mute/unmute,” “channel up/down/number,” “open Netflix/YouTube,” “switch HDMI,” “power on/off” (per Bixby TV guide).
+	•	AC/Air purifier: “cool/heat/dehumidify/auto/sleep/turbo,” “temperature up/down.”
+	•	Robot vacuum: “start/pause/stop/resume,” “go home,” “spot/zone clean.”
+	•	Washer/Dryer: “start/pause/cancel,” “add rinse/spin,” “start dry/time dry/air dry.”
+	•	Dishwasher: “standard/heavy/eco/sanitize/quick,” “dry boost,” “delay start/schedule.”
+	•	Oven/Microwave: “preheat 180,” “bake/roast/air‑fry,” “N minutes/30 seconds more,” “start/stop.”
+	•	Refrigerator (Family Hub): “power cool/power freeze,” “fridge/freezer temperature,” “refill mode,” “memo/shopping” (Family Hub voice).
+
+Deployment optimization: Using SmartThings room/device management, OTA‑deploy only the subset of the defensive lexicon relevant to the home’s inventory (memory/compute optimization).
+
+⸻
+
+Why this approach especially suits India‑style large families
+	•	Multilingual norm: According to India’s 2011 Census, 26% are bilingual and 7% trilingual—preferences differ by generation/region. An IPA lattice covers mixed usage and pronunciation variants within a single recognition layer.
+	•	Samsung ecosystem fit: TV Bixby voice (volume/channel/app), Family Hub voice, Auto Cycle Link, SmartThings rooms/automation, and Matter Multi‑Admin connect naturally.
+
+⸻
+
+If you wish, we can package these scenarios into a product‑spec table (State → Active/Defensive lexicon → thresholds → decision → orchestration) and market‑specific IPA lattice samples (CSV), plus a one‑page policy diagram showing simultaneous updates driven by profile/room/state events.
+
+⸻
+
+Translation 2
+
+Below is a set of practical scenarios—covering multicultural/multilingual families (especially environments like India where preferred languages differ by generation) and a range of appliance contexts—showing how the Active Lexicon (for execution) and the Defensive Lexicon (for silent reject) change dynamically, and how the threshold (θ) adapts to the context. Each scenario summarizes at a glance: policy → changes → execute/reject/orchestrate → observable signal flow.
+(Checked for alignment with publicly available ecosystem features such as Samsung TV Bixby voice for volume/channel/app control, Family Hub Bixby/Alexa support, SmartThings Auto Cycle Link (washer→dryer), SmartThings room/device group management, and Matter Multi‑Admin for multi‑ecosystem control.)
+
+⸻
+
+A. Summary of the criteria for dynamic adjustment (Policy)
+
+(1) Opening/closing the Active Lexicon
+	•	State: If the washer is spinning/near completion, activate “start/schedule drying” and lower θ (easier pass‑through). For dishwashers at night, activate “Quiet start / delayed start” and lower θ.
+	•	Room (proximity): Prioritize nearby devices per SmartThings room/device groups (“Living room TV …”).
+	•	Profile/Language: Apply speaker‑profile preferences for language/expression patterns (e.g., English one‑word commands, Korean/Hindi bigrams). Family Hub personalization is trending toward stronger user‑specific behavior.
+	•	Environment (SNR/time): Under loud conditions (AC turbo/washer spin), raise θ for risky commands; at night, lower θ for low‑noise intents.
+
+(2) Defensive Lexicon matching → “silent reject”
+	•	Top priority: TV/soundbar‑only commands (volume/channel/mute/app/input/power). If the target is not the TV, silent reject via defensive match. Since Samsung TVs officially support Bixby for volume/channel/app control, TV entries are the core of the defensive lexicon.
+	•	Household‑specific subset deployment: Use SmartThings to detect the device inventory, then distribute only the relevant defensive categories to minimize memory/compute.
+
+(3) Cross‑device orchestration
+	•	State‑driven: Washer near end → send event to the dryer via SmartThings/Auto Cycle Link.
+	•	Room/token‑driven routing: If a room/device token exists (“Living room TV volume”), route to that device via the hub. Matter Multi‑Admin enables concurrent operation across ecosystems.
+
+Example PRSVO threshold formula
+\theta_k=\alpha+\beta\cdot \text{Len}(k)+\gamma\cdot \text{Conf}(k)+\delta\cdot \text{SNR}^{-1}+\eta\cdot \text{StateBias}
+StateBias: spin/turbo (+); night‑quiet/near‑end (−), etc.
+
+⸻
+
+B. Twelve scenarios including multicultural/multilingual families
+
+Language premise (India, etc.): India has widespread multilingual usage (bilingual 26%, trilingual 7% per 2011 Census). Preferences vary by generation/region (Hindi/English/Bengali/Tamil/Telugu/Marathi, etc.). This design uses an IPA‑based lexicon to accommodate mixing and generational differences.
+	1.	Living‑room “Movie Night”—TV volume vs. AC defense
+	•	Context/devices: Parents (English/Hinglish), grandparents (Hindi), child (English). TV + AC listening.
+	•	Active: TV—activate “volume/channel/play/pause”; lower θ in night movie mode.
+	•	Defensive: AC—TV‑only phrases (volume/channel/app) → silent reject via defensive matching.
+	•	Orchestration: Room token (“Living room TV volume”) targets TV only.
+	•	Observable: TV OSD shows top‑N keywords & confidence for ~1–2 seconds.
+	2.	Washer→Dryer “end‑of‑cycle” auto handoff
+	•	Context: Washer spinning/near completion.
+	•	Active: Washer—“start/schedule drying”; θ lowered significantly.
+	•	Defensive: If “turn it up” occurs nearby, washer/dryer classify as TV‑only and stay silent.
+	•	Orchestration: “Schedule drying” recognized → send dryer settings via SmartThings/Auto Cycle Link.
+	3.	Kitchen “Refill Mode” + TV/app defense
+	•	Context: Family Hub collects “refill mode” items for ~20 seconds (milk/eggs/yogurt).
+	•	Defense: Child says “Open Netflix” → fridge treats it as TV/app‑only and silently rejects.
+	•	Observable: Family Hub shows items + confidence bars and a brief summary before sending. Bixby/Alexa both supported.
+	4.	Indian multigenerational family—mixed languages in the living room
+	•	Context: Grandparents (Hindi), parents (English), child (English + local language).
+	•	Active: TV—activate multilingual equivalents like “volume up / mute / awāz badhāo (Hindi)” via IPA lattice.
+	•	Defensive: AC/robot treat those phrases as TV‑defensive → silent.
+	•	Basis: Indian multilingual prevalence (26% bilingual, 7% trilingual).
+	5.	Bedroom “Sleep Mode”—AC first, TV defended
+	•	Context: Night; bedroom AC in sleep mode.
+	•	Active: AC—“temperature −1 / sleep / quiet,” lower θ.
+	•	Defensive: TV—volume/channel/app treated defensively and ignored.
+	•	Observable: AC panel briefly shows top‑N & threshold.
+	6.	Robot vacuum “zone clean” vs. oven preheat defense
+	•	Context: Living room says “zone A clean,” kitchen requests oven preheat 180.
+	•	Active: Robot—“zone/spot/home” active; Oven—“preheat/temperature slot/start” active.
+	•	Defensive: Each device defends against the other’s commands (cross false‑positives prevented).
+	•	Orchestration: Completion broadcast to Family Hub/TV.
+	7.	Air‑quality deterioration—“allergy mode” + room tokens
+	•	Context: IAQ sensor worsens.
+	•	Active: Air purifier—activate “allergy mode,” lower θ.
+	•	Defensive: Nearby AC/TV remain silent via defensive lexicon.
+	•	Orchestration: “Living room allergy mode” acts only on devices in that room.
+	8.	Party/Guest mode—conservative thresholds
+	•	Context: Many guests (multilingual; noise ↑).
+	•	Active: Raise θ for all high‑risk devices/commands.
+	•	Defensive: Expand TV/app defensive lexicon.
+	•	Orchestration: Permit TV/lighting/audio via room tokens only.
+	9.	India: kitchen in Hindi, living room in English (simultaneous use)
+	•	Context: Kitchen Family Hub—Hindi “refill”‑type commands; Living‑room TV—English media control.
+	•	Active/Defensive: Each device activates its preferred language/phrases; treats the other’s phrases defensively.
+	•	Orchestration: Family Hub shopping list shared via SmartThings; TV shows notifications only.
+	10.	Senior profile—polite/slow speech compensation
+
+	•	Context: Grandparents (Hindi) with slower speech/duplicated words.
+	•	Active: Profile allows slower prosody/long vowels (slightly lower θ); expand IPA lattice with synonyms.
+	•	Defensive: TV/app phrases still defended.
+	•	Observable: Panel shows committed keyword + confidence briefly.
+
+	11.	Multi‑ecosystem (visiting day: Alexa + SmartThings + TV Bixby)
+
+	•	Context: Alexa on Family Hub, Bixby on TV, SmartThings present.
+	•	Policy: Prefer local device execution; hub routing as needed; require room token if conflict. (Assumes Matter Multi‑Admin.)
+	•	Defensive: Phrases dedicated to other ecosystems are in the defensive lexicon and silently rejected.
+
+	12.	Network instability—on‑device “compact” mode
+
+	•	Context: Internet unavailable (e.g., right after power restoration).
+	•	Active: Each device exposes only essential command subsets; slightly raise θ to curb false triggers.
+	•	Defensive: Cross‑device/app/cloud‑dependent phrases remain defended.
+	•	Orchestration: When network returns, synchronize history with the hub.
+
+⸻
+
+C. Defensive Lexicon by device (representative families; summary)
+	•	TV/Soundbar (highest defensive priority): volume/channel/mute/play‑pause/app open/input switch/power. (Bixby guide/TV support.)
+	•	AC/Air purifier: temperature/airflow/modes (cool/heat/dehumidify/sleep/turbo)—controllable via app/SmartThings.
+	•	Robot vacuum: start/stop/pause/resume/go home/spot‑zone clean.
+	•	Washer/Dryer: start/pause/cancel/add rinse/spin/start dry/schedule/ time‑dry.
+	•	Dishwasher: standard/heavy/eco/sanitize/dry boost/reserve (delay).
+	•	Oven/Microwave: preheat 180/bake/air‑fry/time/start/stop.
+	•	Refrigerator (Family Hub): power cool/power freeze/temperature/refill/memo/shopping (Bixby/Alexa supported).
+
+Deployment tip: OTA‑deploy only the defensive sub‑lexicon relevant to your home’s device inventory (incremental on new device add). Manage rooms/aliases in SmartThings.
+
+⸻
+
+D. Measurement & tuning points (KPI)
+	•	FAR(h): false accepts per hour; FRR: failure/false reject rate; LAT: latency; PDR: proper defensive reject rate.
+	•	Tuning procedure: Use noise profiles (spin/turbo/kitchen mixer), multilingual utterances (Hindi/English/local mixes), and distance‑by‑room ROC to optimize \theta and \Delta.
+	•	Operational signals:
+	•	Normal mode: brief 1–2 s overlay of top‑N + confidence/threshold; silent reject shows nothing (or a short single LED blink).
+	•	Forensics mode: view “Reject‑Other‑Device” timestamps/scores.
+
+⸻
+
+E. Why this is particularly advantageous for multicultural/multilingual households
+	•	IPA‑based lattice handles Hindi/English/local synonyms, pronunciation variants, and code‑switching (Hinglish) in a single recognition layer.
+	•	Per‑profile/room/state thresholds + defensive lexicon make intended moments easier (lower θ) while quietly rejecting other devices’ commands.
+	•	In households like those in India—where language preferences vary across generations/regions—this approach reduces false triggers while increasing pass‑through, consistent with official multilingual prevalence statistics.
+
+⸻
+
+References (clickable)
+	•	TV Bixby: Voice control guide for volume/channel/app.
+	•	Family Hub: Bixby/Alexa voice support.
+	•	Auto Cycle Link: Washer→dryer linking (SmartThings integration).
+	•	SmartThings room/device management: location/room grouping.
+	•	Matter Multi‑Admin: concurrent multi‑ecosystem control.
+	•	Indian multilingual statistics (official tables/reports): 26% bilingual, 7% trilingual, etc.
+
+⸻
+
+If you like, I can compress the 12 scenarios into a product spec sheet (State → Lexicon/Threshold → Decision → Orchestration) and a field‑tuning guide (Δ/θ criteria) as a 1–2‑page internal document.
+
+
+
+नीचे अभी‑अभी दिए गए उत्तर के दोनों संस्करणों का संपूर्ण हिंदी अनुवाद प्रस्तुत है। मैंने वाक्य विन्यास को प्राकृतिक हिंदी में ढाला है, पर सभी मूल बिंदु, सूत्र, IPA, उदाहरण और परिदृश्य जस‑के‑तस रखे हैं।
+
+⸻
+
+अनुवाद 1
+
+यह दस्तावेज़ IPA (International Phonetic Alphabet) को प्रथम‑वर्ग इनपुट प्रस्तुति के रूप में सामने रखता है और वक्ता‑पहचान (Speaker Recognition; वैकल्पिक/ON‑OFF) को आधार मानते हुए, एक बड़े बहुसांस्कृतिक‑बहुभाषी परिवार (भारत जैसे परिवेश) के लिए “कमान्ड‑सेट केंद्रित” परिदृश्य‑संग्रह प्रदान करता है। हर परिदृश्य में दिखाया गया है कि उपयोगकर्ता‑विशिष्ट सक्रिय शब्दकोश (Active Lexicon; निष्पादन हेतु) और रक्षात्मक शब्दकोश (Defensive Lexicon; चुपचाप अस्वीकार हेतु) एक साथ कैसे बदलते हैं, और थ्रेशहोल्ड (θ) संदर्भानुसार गतिशील रूप से कैसे समायोजित होता है।
+(सार्वजनिक रूप से उपलब्ध सैमसंग इकोसिस्टम सुविधाओं—TV Bixby वॉयस (वॉल्यूम/चैनल/ऐप), Family Hub का Bixby/Alexa, SmartThings Auto Cycle Link, SmartThings रूम‑प्रबंधन, तथा Matter Multi‑Admin—के साथ फ़ीचर‑समरूपता जाँची गई है।)
+
+IPA सम्बन्धी नोट: नीचे दिए गए IPA उच्चारण अनुमानित/प्रतिनिधि हैं; क्षेत्र/वक्ता के अनुसार बदल सकते हैं। सिस्टम G2P→IPA लैटिस के माध्यम से एक साथ कई भिन्नताओं को समेटता है (उदा., ‘volume up’ /ˈvɒljʊm ʌp/ ~ /ˈvɑːljuːm ʌp/; हिंदी ‘awāz badhāo’ “आवाज़ बढ़ाओ” /aːˈʋaːz bəd̪ʱaːoː/ आदि)।
+
+⸻
+
+कॉमन पॉलिसी (संक्षेप)
+	•	द्वि‑शब्दकोश का समकालिक मिलान: हर डिवाइस पर सक्रिय (Active) और रक्षात्मक (Defensive) दोनों शब्दकोश एक साथ मैच हों।
+	•	निष्पादन नियम: S^{act}{\max} \ge \theta{act} ⇒ Execute।
+	•	मौन अस्वीकृति (Silent Reject): S^{def}{\max} - S^{act}{\max} \ge \Delta और S^{def}{\max} \ge \theta{def} ⇒ Reject & Stay‑Silent।
+	•	स्कोर में करीबी प्रतिस्पर्धा (|…| < Δ) हो तो कन्फर्मेशन सवाल या रूम/डिवाइस टोकन (जैसे “लिविंग रूम TV…”) आवश्यक।
+	•	PRSVO थ्रेशहोल्ड अनुकूलन:
+\theta_k=\alpha+\beta\cdot \text{Len}(k)+\gamma\cdot \text{Conf}(k)+\delta\cdot \text{SNR}^{-1}+\eta\cdot \text{StateBias}
+उदा., StateBias: वॉशर का “समापन‑निकट” = −; नाइट Quiet = −; स्पिन/टर्बो शोर = +, आदि।
+	•	वक्ता‑पहचान (वैकल्पिक): ON होने पर प्रोफ़ाइल‑वार भाषा/अभिव्यक्ति को वजन दें (उदा., दादा‑दादी = हिंदी; माता‑पिता = अंग्रेज़ी/हिंग्लिश)। OFF होने पर परिवार‑डिफ़ॉल्ट लागू।
+	•	ओर्केस्ट्रेशन: Auto Cycle Link (वॉशर→ड्रायर), SmartThings रूम‑रूटिंग, तथा Matter Multi‑Admin के साथ संयोजन।
+
+⸻
+
+परिदृश्य 1 — “मूवी नाइट” (लिविंग रूम): TV सक्रिय ↑, AC रक्षात्मक (समवर्ती परिवर्तन)
+
+पात्र: पिता (अंग्रेज़ी/हिंग्लिश), दादा‑दादी (हिंदी), बच्चा (अंग्रेज़ी)। TV + साउंडबार + AC सुन रहे हैं।
+	•	TV का Active Lexicon (उदाहरण):
+“volume up” /ˈvɒljʊm ʌp/, “mute” /mjuːt/, “channel seven” /ˈtʃænəl ˈsɛvən/, “open Netflix” /ˈnɛtflɪks/
+हिंदी समानार्थी: “awāz badhāo” /aːˈʋaːz bəd̪ʱaːoː/, “mute haṭāo (अनम्यूट)” /mjuːt ɦəˈʈaːoː/
+	•	AC का Defensive Lexicon (उदाहरण):
+TV‑विशेष वाक्यांश—“volume up/down”, “channel up/down”, “open Netflix”, “mute/unmute” → रक्षात्मक मिलान पर मौन।
+	•	थ्रेशहोल्ड (PRSVO): “मूवी मोड” में TV के लिए θ कम, AC के लिए θ थोड़ा बढ़ा (फॉल्स‑ट्रिगर से बचाव)।
+	•	परिणाम: भले AC ने “volume up” पहले “सुना” हो, रक्षात्मक मिलान जीतता है और AC चुपचाप अस्वीकार करता है; TV निष्पादित करता है। (TV Bixby वॉल्यूम/चैनल/ऐप कंट्रोल सपोर्ट करता है।)
+
+⸻
+
+परिदृश्य 2 — वॉशर→ड्रायर “एंड‑गेम”: समापन के पास ड्रायर‑संबंधी सक्रियण व θ‑कमी
+
+स्टेट इवेंट: वॉशर स्पिन/समापन‑निकट संकेत।
+	•	वॉशर Active Lexicon परिवर्तन:
+“start dry” /stɑːrt draɪ/, “schedule dry”, हिंदी “sukhāna chālu karo (ड्राई शुरू)” /sʊˈkʰaːna t͡ʃaːlu kəro/ (अनुमान), “send to dryer”।
+	•	θ में बड़ा घटाव (पास‑थ्रू आसान)।
+	•	ड्रायर ओर्केस्ट्रेशन: Auto Cycle Link/SmartThings से ड्रायर को संदर्भ (कोर्स/समय आदि) भेजें।
+	•	समांतर रक्षा: उसी जगह बच्चा “volume up” कहे तो वॉशर/ड्रायर TV‑विशेष रक्षात्मक मिलान से मौन रहेंगे।
+
+⸻
+
+परिदृश्य 3 — किचन “रिफ़िल मोड”: फ़्रिज सक्रिय ↑, TV/ऐप वाक्यांश रक्षात्मक
+
+डिवाइस: Family Hub रेफ़्रिजरेटर (वॉइस‑हब), पास में TV।
+	•	फ़्रिज Active Lexicon (रिफ़िल) उदाहरण:
+“refill mode”, “add milk/eggs/yogurt”, हिंदी “dūdh/andā/yogurt jodo” (अनुमान)
+	•	फ़्रिज Defensive Lexicon:
+TV/ऐप वाक्यांश—“open Netflix”, “change channel”, “volume up” आदि—रक्षात्मक मिलान → मौन।
+	•	थ्रेशहोल्ड: रात में “Quiet start / delayed start” हेतु θ कम।
+	•	परिणाम: शॉपिंग‑वाक्य संग्रहित/रैंक होते हैं; TV/ऐप कमाण्ड अनदेखी (Family Hub के Bixby/Alexa वॉइस‑पर्यावरण से संगत)।
+
+⸻
+
+परिदृश्य 4 — बेडरूम “स्लीप मोड”: AC सक्रिय ↑, TV रक्षात्मक
+	•	AC Active Lexicon (उदाहरण):
+“sleep mode”, “temperature down one” /ˈtɛmp(ə)rətʃə daʊn/, हिंदी “AC thandā karo (और ठंडा करो)” /eːsiː t̪ʰəndaː kəro/ (अनुमान)
+	•	TV Defensive Lexicon: वॉल्यूम/चैनल/ऐप से जुड़े सभी वाक्यांश → मौन।
+	•	थ्रेशहोल्ड: स्लीप मोड में AC हेतु θ कम, अन्य के लिए θ अधिक।
+	•	परिणाम: धीमी आवाज़ पर भी AC प्रतिक्रिया देता है; TV स्थायी रूप से अनुत्तरदायी। (TV Bixby में वॉइस‑सेंसिटिविटी/भाषा सेटिंग्स मौजूद।)
+
+⸻
+
+परिदृश्य 5 — गेस्ट पार्टी: शोर ↑; लाइट/ऑडियो प्राथमिक, हाई‑रिस्क किचन उपकरण सतर्क
+	•	Active: TV/साउंडबार (“pause music”, “next track”), एयर‑प्यूरिफ़ायर (“boost”)।
+	•	Defensive: ओवन “preheat 180”, माइक्रोवेव “3 minutes” जैसे संवेदनशील आदेश अन्य डिवाइसों द्वारा रक्षात्मक‑मौन।
+	•	थ्रेशहोल्ड: कम SNR में हाई‑रिस्क उपकरणों के लिए θ बढ़ाएँ; म्यूज़िक/लाइटिंग को अपेक्षाकृत उदार रखें।
+	•	परिणाम: म्यूज़िक/लाइटिंग सहज; किचन उपकरण सुरक्षित‑मौन।
+
+⸻
+
+परिदृश्य 6 — रोबोट वैक्यूम “ज़ोन क्लीन” बनाम ओवन प्रीहीट: परस्पर रक्षा
+	•	रोबोट Active: “zone A clean”, “spot clean”, हिंदी “gharīb (ज़ोन) safai” (अनुमान)
+	•	ओवन Active: “preheat 180” /ˌpriːˈhiːt/, “bake”, हिंदी “180 par preheat karo”
+	•	म्यूचुअल डिफ़ेन्स: रोबोट ओवन‑वाक्यों के विरुद्ध रक्षा करे; ओवन रोबोट‑वाक्यों के विरुद्ध—क्रॉस‑फॉल्स‑पॉज़िटिव रोका जाए।
+	•	ओर्केस्ट्रेशन: पूर्णता नोटिफ़िकेशन Family Hub/TV पर प्रसारित (हब)।
+
+⸻
+
+परिदृश्य 7 — लिविंग रूम कोड‑स्विचिंग (हिंदी + अंग्रेज़ी): मिश्रित भाषा का संभाल
+	•	TV Active (बहुभाषी):
+“volume up”, “mute”, हिंदी “awāz badhāo”, “TV band karo (TV बंद करो)” /tiːʋiː bənd kəro/
+	•	AC रक्षात्मक: ऊपर के सभी वाक्यांश रक्षात्मक… मौन।
+	•	थ्रेशहोल्ड: Speaker ID ON होने पर दादा‑दादी (हिंदी) को वज़न; OFF पर परिवार‑डिफ़ॉल्ट।
+	•	परिणाम: IPA लैटिस मिश्रित उच्चारण/भाषा को आत्मसात कर सही रूटिंग करता है। (भारत में बहुभाषिकता की सामान्यता परिलक्षित।)
+
+⸻
+
+परिदृश्य 8 — बच्चे की संक्षिप्त कमाण्ड बनाम माता‑पिता की विस्तृत कमाण्ड: प्रोफ़ाइल‑आधारित वेट
+	•	बच्चा प्रोफ़ाइल: TV शॉर्ट (“play”, “pause”), AC शॉर्ट (“cooler”) → शॉर्ट‑उच्चारण हेतु θ कम।
+	•	माता‑पिता प्रोफ़ाइल: वाक्य‑आधारित (“open Netflix and set volume to 15”) → लंबी अभिव्यक्ति को वज़न।
+	•	रक्षा: फ़्रिज/वॉशर TV/ऐप कमाण्ड को रक्षात्मक‑मौन करें।
+	•	परिणाम: प्रोफ़ाइल‑लेयर एक ही कमरे में कई डिवाइसों के थ्रेशहोल्ड व शब्दकोश एक साथ समायोजित करती है।
+
+⸻
+
+परिदृश्य 9 — किचन हिंदी, लिविंग रूम अंग्रेज़ी (भारतीय बहु‑पीढ़ी): रूम‑वार भाषा‑प्राथमिकता
+	•	किचन (Family Hub) Active: हिंदी शॉपिंग (“andā/dūdh jodo” आदि) + अंग्रेज़ी बैकअप।
+	•	लिविंग रूम (TV) Active: अंग्रेज़ी मीडिया‑कंट्रोल + हिंदी बैकअप।
+	•	परस्पर रक्षा: किचन TV‑वाक्यांशों को रक्षा; लिविंग रूम शॉपिंग‑वाक्यांशों को रक्षा।
+	•	ओर्केस्ट्रेशन: सूची SmartThings से साझा; TV पर सिर्फ़ नोटिफ़िकेशन।
+
+⸻
+
+परिदृश्य 10 — वायु‑गुणवत्ता बिगड़ी (सेंसर इवेंट) + रूम टोकन: स्टेट + लोकेशन एक साथ
+	•	एयर‑प्यूरिफ़ायर Active: “allergy mode” /ˈælərdʒi/, हिंदी “एलर्जी मोड” (अनुमान)
+	•	रक्षा: पास के AC/TV रक्षात्मक‑मौन।
+	•	थ्रेशहोल्ड: स्टेट इवेंट से θ कम; रूम‑टोकन (“लिविंग रूम…”) आए तो उसी कमरे में निष्पादन।
+	•	परिणाम: सेंसर‑स्टेट + भाषा के संयोजन से फॉल्स‑पॉज़िटिव में कमी।
+
+⸻
+
+परिदृश्य 11 — बहु‑इकोसिस्टम सहअस्तित्व (Alexa + Bixby + SmartThings): रूटिंग नीति
+	•	नीति: स्थानीय निष्पादन प्राथमिक; रूम‑टोकन होने पर हब‑रूटिंग; टकराव पर कन्फर्मेशन।
+	•	रक्षा: अन्य एजेंट‑समर्पित वाक्यांश (जैसे “Alexa, …”)—अन्य डिवाइसों द्वारा रक्षात्मक‑मौन।
+	•	आधार: Matter Multi‑Admin से बहु‑इकोसिस्टम समवर्ती नियंत्रण संभव।
+
+⸻
+
+परिदृश्य 12 — नेटवर्क अस्थिर (पावर‑रिकवरी के तुरंत बाद): ऑन‑डिवाइस संक्षिप्त मोड
+	•	Active: हर डिवाइस में आवश्यक‑कमान्ड उप‑समुच्चय ही सक्रिय; θ थोड़ा बढ़ा।
+	•	रक्षा: TV/ऐप/क्लाउड‑निर्भर वाक्यांश रक्षात्मक बने रहें।
+	•	रिकवरी के बाद: हब के साथ लॉग/स्टेट सिंक।
+
+⸻
+
+समवर्ती परिवर्तनों का बहु‑डिवाइस प्रसार (सार)
+	•	स्टेट इवेंट (उदा., वॉशर समापन‑निकट): वॉशर Active Lexicon विस्तृत + θ कम; साथ‑साथ ड्रायर ओर्केस्ट्रेशन ट्रिगर।
+	•	रूम टोकन (“लिविंग रूम TV…”): उस कमरे के TV की सक्रियता बढ़ाएँ; उसी कमरे के AC/रोबोट की रक्षा मजबूत।
+	•	प्रोफ़ाइल प्रवेश (दादा‑दादी आए, Speaker ID ON): उसी कमरे के TV/AC/Family Hub पर हिंदी‑प्राथमिक वेट एक साथ लागू (हर उपकरण का Active/Defensive सेट साथ‑साथ बदले)।
+	•	समय/शोर (रात/टर्बो शोर): नाइट‑Quiet हेतु θ कम; हाई‑रिस्क/अस्पष्ट वाक्य हेतु θ अधिक—ये परिवर्तन एक‑साथ फैलें।
+
+⸻
+
+रक्षात्मक शब्दकोश (श्रेणी‑वार प्राथमिक परिवार; IPA‑लैटिस अनुशंसित)
+	•	TV/साउंडबार (सर्वोच्च रक्षा‑प्राथमिक): “volume up/down”, “mute/unmute”, “channel up/down/number”, “open Netflix/YouTube”, “switch HDMI”, “power on/off” (Bixby TV गाइड अनुरूप)।
+	•	AC/एयर‑प्यूरिफ़ायर: “cool/heat/dehumidify/auto/sleep/turbo”, “temperature up/down”।
+	•	रोबोट वैक्यूम: “start/pause/stop/resume”, “go home”, “spot/zone clean”।
+	•	वॉशर/ड्रायर: “start/pause/cancel”, “add rinse/spin”, “start dry/time dry/air dry”।
+	•	डिशवॉशर: “standard/heavy/eco/sanitize/quick”, “dry boost”, “delay start/schedule”।
+	•	ओवन/माइक्रोवेव: “preheat 180”, “bake/roast/air‑fry”, “N minutes/30 seconds more”, “start/stop”।
+	•	रेफ़्रिजरेटर (Family Hub): “power cool/power freeze”, “fridge/freezer temperature”, “refill mode”, “memo/shopping” (Family Hub वॉइस)।
+
+परिनियोजन अनुकूलन: SmartThings के रूम/डिवाइस‑प्रबंधन से घर की इन्वेंट्री के प्रासंगिक उप‑समुच्चयों वाला Defensive Lexicon ही OTA से भेजें (मेमोरी/कम्प्यूट अनुकूलन)।
+
+⸻
+
+यह दृष्टिकोण भारत‑नुमा बड़े परिवार के लिए विशेष रूप से उपयुक्त क्यों
+	•	बहुभाषिक सामान्यता: भारत की 2011 जनगणना के अनुसार ~26% द्विभाषी और ~7% त्रिभाषी—पीढ़ी/क्षेत्र के अनुसार पसंद‑भाषाएँ भिन्न। IPA‑लैटिस मिश्रण व उच्चारण‑भिन्नता को एक‑ही पहचान‑स्तर पर संभालता है।
+	•	सैमसंग इकोसिस्टम संगति: TV‑Bixby (वॉल्यूम/चैनल/ऐप), Family Hub वॉइस, Auto Cycle Link, SmartThings रूम/ऑटोमेशन, Matter Multi‑Admin—आपस में स्वाभाविक रूप से जुड़ते हैं।
+
+⸻
+
+यदि चाहें तो इन्हीं परिदृश्यों को हम उत्पाद‑विशेष तालिका (State → Active/Defensive शब्दकोश → थ्रेशहोल्ड → निर्णय → ओर्केस्ट्रेशन) और बाज़ार‑वार IPA‑लैटिस नमूने (CSV) के रूप में संकलित कर सकते हैं; साथ में प्रोफ़ाइल/रूम/स्टेट‑इवेंट पर आधारित समकालिक अपडेट‑नियम का एक‑पेज नीति‑आरेख भी देंगे।
+
+⸻
+
+अनुवाद 2
+
+नीचे बहुसांस्कृतिक/बहुभाषी परिवारों (विशेषतः भारत जैसे जहाँ पीढ़ियों में पसंद‑भाषाएँ अलग हों) तथा बहु‑डिवाइस प्रसंगों के लिए ऐसे व्यावहारिक परिदृश्य दिए हैं, जिनमें सक्रिय शब्दकोश (Active Lexicon; निष्पादन) और रक्षात्मक शब्दकोश (Defensive Lexicon; मौन‑अस्वीकृति) गतिशील रूप से बदलते हैं, और थ्रेशहोल्ड (θ) संदर्भ के अनुरूप एडैप्ट होता है। हर परिदृश्य “नीति → परिवर्तन → Execute/Reject/Orchestrate → दृश्य संकेत‑प्रवाह” के एक‑नज़र प्रारूप में संक्षेपित है।
+(सार्वजनिक इकोसिस्टम सुविधाओं से फ़ीचर‑अलाइनमेंट जाँचा गया: Samsung TV Bixby (वॉल्यूम/चैनल/ऐप), Family Hub Bixby/Alexa, SmartThings Auto Cycle Link (वॉशर→ड्रायर), SmartThings रूम/डिवाइस‑समूह प्रबंधन, तथा Matter Multi‑Admin (मल्टी‑इकोसिस्टम कंट्रोल)।)
+
+⸻
+
+A. गतिशील समायोजन के मानदंड (Policy) — सार
+
+(1) Active Lexicon का खोलना/बंद करना
+	•	स्टेट: वॉशर स्पिन/समापन‑निकट हो तो “ड्राई शुरू/शेड्यूल” को सक्रिय करें और θ कम करें (आसान पास‑थ्रू)। डिशवॉशर‑नाइट में “Quiet start/Delayed start” सक्रिय व θ कम।
+	•	रूम (प्रॉक्सिमिटी): SmartThings रूम/डिवाइस‑समूह के अनुसार नज़दीकी डिवाइस प्राथमिक (“लिविंग रूम TV …”)।
+	•	प्रोफ़ाइल/भाषा: वक्ता‑प्रोफ़ाइल के अनुरूप भाषा/अभिव्यक्ति‑पैटर्न (उदा., अंग्रेज़ी शॉर्ट कमाण्ड, कोरियन/हिंदी बायग्राम आदि) को वज़न। Family Hub पर निजीकरण और सशक्त हो रहा है।
+	•	पर्यावरण (SNR/समय): तेज़ शोर (AC टर्बो/वॉशर स्पिन) में हाई‑रिस्क कमाण्ड हेतु θ बढ़ाएँ; रात में लो‑नॉइज़ इंटेंट हेतु θ घटाएँ।
+
+(2) Defensive Lexicon मिलान ⇒ “मौन‑अस्वीकृति”
+	•	टॉप‑प्रायोरिटी: TV/साउंडबार‑विशेष कमाण्ड (वॉल्यूम/चैनल/म्यूट/ऐप/इनपुट/पावर)। लक्षित‑डिवाइस TV न हो तो रक्षात्मक मिलान से चुपचाप अस्वीकार। Samsung TV पर Bixby का वॉल्यूम/चैनल/ऐप कंट्रोल आधिकारिक है, इसलिए TV‑एंट्रीज़ रक्षात्मक शब्दकोश का कोर हैं।
+	•	घर‑विशेष उप‑समुच्चय परिनियोजन: SmartThings से डिवाइस‑इन्वेंट्री पहचान कर केवल प्रासंगिक रक्षात्मक श्रेणियाँ भेजें—मेमोरी/कम्प्यूट बचत।
+
+(3) क्रॉस‑डिवाइस ओर्केस्ट्रेशन
+	•	स्टेट‑ड्रिवन: वॉशर समापन‑निकट ⇒ SmartThings/Auto Cycle Link से इवेंट ड्रायर तक।
+	•	रूम/टोकन‑ड्रिवन रूटिंग: “लिविंग रूम TV वॉल्यूम” जैसा टोकन हो तो हब के ज़रिये उसी डिवाइस पर रूट करें। Matter Multi‑Admin से मल्टी‑इकोसिस्टम समानांतर संचालन संभव।
+
+PRSVO थ्रेशहोल्ड सूत्र (उदाहरण)
+\theta_k=\alpha+\beta\cdot \text{Len}(k)+\gamma\cdot \text{Conf}(k)+\delta\cdot \text{SNR}^{-1}+\eta\cdot \text{StateBias}
+StateBias: स्पिन/टर्बो (+); नाइट‑क्वाइट/समापन‑निकट (−), इत्यादि।
+
+⸻
+
+B. बहुसांस्कृतिक/बहुभाषी परिवार सहित 12 परिदृश्य
+
+भाषिक आधार (भारत आदि): 2011 जनगणना के अनुसार भारत में ~26% द्विभाषी और ~7% त्रिभाषी। पीढ़ी/क्षेत्र के अनुसार हिंदी/अंग्रेज़ी/बंगाली/तमिल/तेलुगु/मराठी आदि की प्राथमिकताएँ भिन्न। यह डिज़ाइन IPA‑आधारित शब्दकोश से मिश्रण और पीढ़ीगत भिन्नता को सम्हालता है।
+	1.	लिविंग रूम “मूवी नाइट”—TV वॉल्यूम बनाम AC रक्षा
+	•	प्रसंग/डिवाइस: माता‑पिता (अंग्रेज़ी/हिंग्लिश), दादा‑दादी (हिंदी), बच्चा (अंग्रेज़ी)। TV + AC सुन रहे हैं।
+	•	Active: TV—“वॉल्यूम/चैनल/प्ले/पॉज़” सक्रिय; नाइट‑मूवी मोड में θ कम।
+	•	Defensive: AC—TV‑विशेष वाक्यांश (वॉल्यूम/चैनल/ऐप) ⇒ मौन।
+	•	ओर्केस्ट्रेशन: “लिविंग रूम TV वॉल्यूम” जैसे रूम‑टोकन पर केवल TV निष्पादित।
+	•	दृश्य संकेत: TV OSD ~1–2 सेकंड के लिए top‑N कीवर्ड/कॉन्फ़िडेन्स दिखाए।
+	2.	वॉशर→ड्रायर “एंड‑ऑफ़‑साइकिल” ऑटो‑हैंडऑफ़
+	•	प्रसंग: वॉशर स्पिन/समापन‑निकट।
+	•	Active: “ड्राई शुरू/शेड्यूल” — θ काफ़ी कम।
+	•	Defensive: पास में “turn it up” जैसी कमाण्ड पर वॉशर/ड्रायर उसे TV‑विशेष मानकर मौन।
+	•	ओर्केस्ट्रेशन: “schedule drying” पहचाने जाने पर SmartThings/Auto Cycle Link से ड्रायर सेटिंग भेजें।
+	3.	किचन “रिफ़िल मोड” + TV/ऐप रक्षा
+	•	प्रसंग: Family Hub ~20 सेकंड के लिए “रिफ़िल मोड” में (दूध/अंडे/योगर्ट)।
+	•	Defensive: बच्चा “Open Netflix” कहे तो फ़्रिज इसे TV/ऐप‑विशेष मानकर मौन।
+	•	दृश्य संकेत: Family Hub पर आइटम + कॉन्फ़िडेन्स‑बार, भेजने से पहले संक्षिप्त सार। Bixby/Alexa समर्थित।
+	4.	भारतीय बहु‑पीढ़ी—लिविंग रूम में मिश्रित भाषाएँ
+	•	प्रसंग: दादा‑दादी (हिंदी), माता‑पिता (अंग्रेज़ी), बच्चा (अंग्रेज़ी + स्थानीय भाषा)।
+	•	Active: TV—“volume up / mute / awāz badhāo (हिंदी)” जैसे बहुभाषी समतुल्य IPA‑लैटिस से सक्रिय।
+	•	Defensive: AC/रोबोट इन्हें TV‑रक्षा मानकर मौन।
+	•	आधार: भारतीय बहुभाषिकता (26% द्विभाषी, 7% त्रिभाषी)।
+	5.	बेडरूम “स्लीप मोड”—AC प्रथम, TV रक्षात्मक
+	•	प्रसंग: रात; बेडरूम AC स्लीप मोड।
+	•	Active: AC—“टेम्प −1/स्लीप/क्वाइट” हेतु θ कम।
+	•	Defensive: TV—वॉल्यूम/चैनल/ऐप अनदेखे।
+	•	दृश्य संकेत: AC पैनल पर संक्षेप में top‑N/θ।
+	6.	रोबोट “ज़ोन क्लीन” बनाम ओवन प्रीहीट रक्षा
+	•	प्रसंग: लिविंग रूम “ज़ोन A क्लीन”; किचन “ओवन 180 प्रीहीट”।
+	•	Active: रोबोट—“ज़ोन/स्पॉट/होम”; ओवन—“प्रीहीट/टेम्प‑स्लॉट/स्टार्ट”।
+	•	Defensive: परस्पर रक्षा—क्रॉस फॉल्स‑पॉज़िटिव नहीं।
+	•	ओर्केस्ट्रेशन: पूर्णता Family Hub/TV पर ब्रॉडकास्ट।
+	7.	IAQ बिगड़ना—“एलर्जी मोड” + रूम‑टोकन
+	•	प्रसंग: एयर‑क्वालिटी सेंसर ख़राब रीडिंग।
+	•	Active: एयर‑प्यूरिफ़ायर—“allergy mode”; θ कम।
+	•	Defensive: पास के AC/TV मौन।
+	•	ओर्केस्ट्रेशन: “लिविंग रूम एलर्जी मोड” ⇒ उसी कमरे के डिवाइस सक्रिय।
+	8.	पार्टी/गेस्ट मोड—सतर्क थ्रेशहोल्ड
+	•	प्रसंग: मेहमान अधिक (बहुभाषी; शोर ↑)।
+	•	Active: सभी हाई‑रिस्क कमाण्ड हेतु θ बढ़ाएँ।
+	•	Defensive: TV/ऐप रक्षात्मक शब्दकोश विस्तृत।
+	•	ओर्केस्ट्रेशन: TV/लाइटिंग/ऑडियो केवल रूम‑टोकन से अनुमति।
+	9.	भारत: किचन हिंदी, लिविंग रूम अंग्रेज़ी (एक साथ)
+	•	प्रसंग: किचन Family Hub—हिंदी “रिफ़िल”‑क्लास; लिविंग रूम TV—अंग्रेज़ी मीडिया‑कंट्रोल।
+	•	Active/Defensive: हर डिवाइस अपनी भाषा/वाक्यांश सक्रिय; दूसरे के वाक्यांश रक्षा।
+	•	ओर्केस्ट्रेशन: शॉपिंग‑लिस्ट SmartThings से साझा; TV पर केवल अलर्ट।
+	10.	सीनियर प्रोफ़ाइल—धीमी/विनीत वाक्य की क्षतिपूर्ति
+
+	•	प्रसंग: दादा‑दादी (हिंदी)—धीमी/दोहराए शब्द।
+	•	Active: धीमी प्रोसोड़ी/दीर्घ‑स्वर स्वीकार (θ थोड़ा कम); IPA‑लैटिस में समानार्थी विस्तृत।
+	•	Defensive: TV/ऐप वाक्य अभी भी रक्षात्मक।
+	•	दृश्य: पैनल पर फ़ाइनल कीवर्ड + कॉन्फ़िडेन्स संक्षेप।
+
+	11.	मल्टी‑इकोसिस्टम (मेहमान‑दिवस: Alexa + SmartThings + TV Bixby)
+
+	•	प्रसंग: Family Hub पर Alexa, TV पर Bixby, SmartThings मौजूद।
+	•	नीति: लोकल‑प्राथमिक निष्पादन, हब‑रूटिंग सहायक; टकराव पर रूम‑टोकन आवश्यक। (Matter Multi‑Admin मान्य)
+	•	Defensive: अन्य इकोसिस्टम‑समर्पित वाक्यांश रक्षात्मक‑मौन।
+
+	12.	नेटवर्क अस्थिर—ऑन‑डिवाइस “कम्पैक्ट” मोड
+
+	•	प्रसंग: इंटरनेट अनुपलब्ध (उदा., पावर‑रिस्टोर के तुरंत बाद)।
+	•	Active: केवल आवश्यक कमाण्ड‑सेट; θ थोड़ा बढ़ा (फॉल्स‑ट्रिगर नियंत्रण)।
+	•	Defensive: क्रॉस‑डिवाइस/ऐप/क्लाउड‑निर्भर वाक्यांश रक्षा में।
+	•	ओर्केस्ट्रेशन: नेटवर्क लौटने पर हब से हिस्ट्री‑सिंक।
+
+⸻
+
+C. डिवाइस‑वार Defensive Lexicon (प्रतिनिधि परिवार; सार)
+	•	TV/साउंडबार (उच्चतम रक्षा‑प्राथमिक): वॉल्यूम/चैनल/म्यूट/प्ले‑पॉज़/ऐप‑ओपन/इनपुट‑स्विच/पावर। (Bixby गाइड/TV सपोर्ट)
+	•	AC/एयर‑प्यूरिफ़ायर: ताप/एयरफ़्लो/मोड (कूल/हीट/डीह्यूमिडिफ़ाई/स्लीप/टर्बो)—ऐप/SmartThings से नियंत्रित।
+	•	रोबोट वैक्यूम: स्टार्ट/स्टॉप/पॉज़/रिज़्यूम/गो‑होम/स्पॉट‑ज़ोन क्लीन।
+	•	वॉशर/ड्रायर: स्टार्ट/पॉज़/कैंसल/रिंस‑ऐड/स्पिन/स्टार्ट‑ड्राई/शेड्यूल/टाइम‑ड्राई।
+	•	डिशवॉशर: स्टैण्डर्ड/हेवी/इको/सेनिटाइज़/ड्राई‑बूस्ट/डिले‑स्टार्ट।
+	•	ओवन/माइक्रोवेव: प्रीहीट 180/बेक/एयर‑फ्राइ/समय/स्टार्ट/स्टॉप।
+	•	रेफ़्रिजरेटर (Family Hub): पावर‑कूल/पावर‑फ़्रीज़/टेम्प/रिफ़िल/मेमो/शॉपिंग (Bixby/Alexa संदर्भ)।
+
+परिनियोजन टिप: घर की इन्वेंट्री के अनुरूप केवल वही रक्षात्मक उप‑समुच्चय OTA से भेजें (नए डिवाइस पर इन्क्रिमेंटल)। रूम/उपनाम SmartThings में केंद्रीकृत प्रबंधन।
+
+⸻
+
+D. मापन/ट्यूनिंग बिंदु (KPI)
+	•	FAR(h): प्रति घंटा फ़ॉल्स‑अक्सेप्ट; FRR: असफल/फ़ॉल्स‑रिजेक्ट दर; LAT: लेटेंसी; PDR: रक्षात्मक सही‑अस्वीकृति दर।
+	•	ट्यूनिंग प्रक्रिया: शोर‑प्रोफ़ाइल (स्पिन/टर्बो/किचन मिक्सर), बहुभाषी उच्चारण (हिंदी/अंग्रेज़ी/स्थानीय मिश्रण), रूम‑दूरी‑आधारित ROC से \theta, \Delta का अनुकूलन।
+	•	ऑपरेशनल सिग्नल:
+	•	नॉर्मल मोड: 1–2 सेकंड का top‑N + कॉन्फ़िडेन्स/थ्रेशहोल्ड ओवरले; मौन‑अस्वीकृति पर कोई UI नहीं (या 1 छोटा LED ब्लिंक)।
+	•	फ़ॉरेंसिक मोड: “Reject‑Other‑Device” टाइमस्टैम्प/स्कोर देखें।
+
+⸻
+
+E. बहुसांस्कृतिक/बहुभाषी सेटिंग में यह विशेष रूप से लाभकारी क्यों
+	•	IPA‑लैटिस हिंदी/अंग्रेज़ी/स्थानीय समानार्थी, उच्चारण भिन्नता, और कोड‑स्विचिंग (हिंग्लिश) को एक ही पहचान‑स्तर पर संभालता है।
+	•	प्रोफ़ाइल/रूम/स्टेट‑आधारित थ्रेशहोल्ड + रक्षात्मक शब्दकोश से जहाँ ज़रूरी हो वहाँ पास‑थ्रू आसान (θ कम), और “दूसरे डिवाइस” की कमाण्डों पर चुपचाप अस्वीकृति।
+	•	भारत जैसे परिवारों में, जहाँ पीढ़ी/क्षेत्रानुसार भाषा‑पसंद अलग, यह दृष्टिकोण फ़ॉल्स‑ट्रिगर घटाता और पास‑रेट बढ़ाता है (आधिकारिक बहुभाषिक आँकड़ों के अनुरूप)।
+
+⸻
+
+संदर्भ (क्लिक करने योग्य)
+	•	TV Bixby: वॉल्यूम/चैनल/ऐप हेतु वॉइस‑कंट्रोल गाइड।
+	•	Family Hub: Bixby/Alexa वॉइस सपोर्ट।
+	•	Auto Cycle Link: वॉशर→ड्रायर लिंकेज (SmartThings इंटीग्रेशन)।
+	•	SmartThings रूम/डिवाइस प्रबंधन: लोकेशन/रूम ग्रुपिंग।
+	•	Matter Multi‑Admin: बहु‑इकोसिस्टम समवर्ती नियंत्रण।
+	•	भारतीय बहुभाषिक आँकड़े (आधिकारिक तालिकाएँ/रिपोर्ट): ~26% द्विभाषी, ~7% त्रिभाषी आदि।
+
+⸻
+
+इच्छा हो तो इन 12 परिदृश्यों को हम उत्पाद‑विशेष शीट (State → Lexicon/Threshold → Decision → Orchestration) और फ़ील्ड‑ट्यूनिंग गाइड (Δ/θ मानदंड) में 1–2 पेज के आंतरिक दस्तावेज़ के रूप में संक्षेपित कर सकते हैं।
+
+
+
+
+
+
 SLU (Spoken Language Understanding)
 	•	개념: 사용자의 음성에서 **의도(intent)**와 **슬롯(필수 정보)**을 뽑아 기기가 바로 실행할 수 있는 명령/질의 구조로 바꾸는 기술.
 	•	왜 중요: “무엇을 하려는가(의도)”와 “어떤 값으로(슬롯)”를 파악해 한 번에 동작 결정 → 대화 길이·오탐 줄임.
